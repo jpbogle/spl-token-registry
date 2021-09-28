@@ -1,0 +1,27 @@
+
+[package]
+name = "solananames"
+version = "0.0.1"
+description = "Example template program for storing map of names on solana"
+authors = ["Jeremy Bogle <jeremy@bogle.cc>"]
+repository = "https://github.com/jpbogle/nexus"
+license = "Apache-2.0"
+edition = "2018"
+
+[features]
+no-entrypoint = []
+
+[dependencies]
+borsh = "0.9.1"
+borsh-derive = "0.9.1"
+solana-program = "=1.7.9"
+thiserror = "1.0.24"
+arrayref = "0.3.6"
+
+[dev-dependencies]
+solana-program-test = "=1.7.9"
+solana-sdk = "=1.7.9"
+
+[lib]
+name = "solananames"
+crate-type = ["cdylib", "lib"]
