@@ -2,7 +2,7 @@ import styled from 'styled-components';
 import Colors from 'common/colors';
 import { useState, useEffect } from 'react';
 import { useConnection } from 'common/Connection';
-import { proposeToken, getPendingTokenInfos, initialize } from 'api/anchor_api';
+import { proposeToken, getPendingTokenInfos, initialize } from 'api/api';
 import { useWallet } from '@solana/wallet-adapter-react';
 import * as web3 from '@solana/web3.js';
 import { StyledButton } from 'common/Buttons';
@@ -122,6 +122,7 @@ function Propose() {
             setTags([]);
             notify({ message: 'Succes', description: 'Token proposed succesfully', txid: '123'});
           } catch (e) {
+            setIsLoading(false);
             setError(`${e}`);
           }
         }}>

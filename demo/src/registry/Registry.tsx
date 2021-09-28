@@ -3,7 +3,7 @@ import Colors from 'common/colors';
 import { StyledSelect } from 'common/StyledSelect';
 import { useEffect, useState } from 'react';
 import { useConnection } from 'common/Connection';
-import { getTokenInfos } from 'api/anchor_api';
+import { getTokenInfos } from 'api/api';
 
 const Layout = styled.div`
   width: 100%;

@@ -3,7 +3,7 @@ import Colors from 'common/colors';
 import { useEffect, useState } from 'react';
 import { useConnection } from 'common/Connection';
 import { useWallet } from '@solana/wallet-adapter-react';
-import { voteFor, getPendingTokenInfos } from 'api/anchor_api';
+import { voteFor, getPendingTokenInfos } from 'api/api';
 import { PendingTokenInfo } from 'api/PendingTokenInfo';
 import { LoadingBoundary } from 'common/LoadingBoundary';
 import { StyledButton } from 'common/Buttons';

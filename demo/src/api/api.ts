@@ -1,10 +1,7 @@
 import * as web3 from '@solana/web3.js';
 import * as anchor from '@project-serum/anchor';
 import idl from './spl_token_registry.json';
-
-import { getPhantomWallet } from '@solana/wallet-adapter-wallets';
-import { useWallet, WalletProvider, WalletContextState } from '@solana/wallet-adapter-react';
-import { WalletModalProvider, WalletMultiButton } from '@solana/wallet-adapter-react-ui';
+import { WalletContextState } from '@solana/wallet-adapter-react';
 import { TokenInfo } from './TokenInfo';
 import { PendingTokenInfo } from './PendingTokenInfo';
 
@@ -15,11 +12,6 @@ const PROGRAM_IDL : anchor.Idl = idl;
 const CONFIRM_OPTIONS: web3.ConfirmOptions = {
   preflightCommitment: "processed",
 }
-
-const wallets = [
-  /* view list of available wallets at https://github.com/solana-labs/wallet-adapter#wallets */
-  getPhantomWallet()
-]
 
 export async function getProvider(wallet: anchor.Wallet) {
   /* create the provider and return it to the caller */
