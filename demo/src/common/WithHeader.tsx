@@ -30,6 +30,12 @@ const Header = styled.div`
   #logo {
     height: 30px;
   }
+
+  #logo-text {
+    padding-left: 10px;
+    font-size: 20px;
+    font-family: 'Karla', sans-serif;
+  }
 `;
 
 type Selectable = {
@@ -64,7 +70,8 @@ function WithHeader({ history, children, selected }: HeaderProps) {
     <>
       <Header>
         <div id="left">
-          <img id="logo" src="assets/logo_titled_white.png" alt="SPL Token Names" />
+          <img id="logo" src="assets/logo2.png" alt="SPL Token Names" />
+          <span id="logo-text">SPL TOKEN REGISTRY</span>
         </div>
         <div id="right">
           <StyledLink selected={selected === HeaderLink.FIND} onClick={() => history.push('/')}>FIND</StyledLink>
