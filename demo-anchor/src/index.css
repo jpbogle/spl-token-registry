@@ -1,8 +1,0 @@
-@import '~antd/dist/antd.dark.css';
-
-body {
-  margin: 0;
-  background-color: black;
-  /* background-color: #282c34; */
-  font-family: 'SFHello', sans-serif;
-}
