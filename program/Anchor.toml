@@ -1,5 +1,5 @@
 [programs.localnet]
-spl_token_registry = "Hat4JBCvCMe4NBWPUXo1SU8HH2ppQt2Zpc7DWGwUfvhB"
+spl_token_registry = "ru5MV6sy97YYhGx3WZjWV8jSzWaBShWyoofoapcqypz"
 
 [registry]
 url = "https://anchor.projectserum.com"

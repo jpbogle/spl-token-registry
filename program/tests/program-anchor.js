@@ -1,6 +1,5 @@
 const assert = require("assert");
 const anchor = require("@project-serum/anchor");
-const { SystemProgram } = anchor.web3;
 const web3 = require('@solana/web3.js');
 
 describe("spl-token-registry", () => {
@@ -51,6 +50,11 @@ describe("spl-token-registry", () => {
       const account = await program.account.pendingTokenInfos.fetch(pendingTokensAccount);
       assert.ok(account.pendingTokenInfos.length > 0);
       assert.equal(account.pendingTokenInfos[0].votes, 0);
+      const UTC_seconds_now = Math.floor(Date.now() / 1000);
+
+      // check expiration
+      assert.ok(account.pendingTokenInfos[0].expiration > UTC_seconds_now);
+      assert.ok(account.pendingTokenInfos[0].expiration <= UTC_seconds_now + (60*60*24*7));
     } catch (err) {
       console.log("Error: ", err);
       throw Error(err);
@@ -104,6 +108,30 @@ describe("spl-token-registry", () => {
   it("Does now allow voting for a token that doesnt exist", async () => {
     const seed = Buffer.from(anchor.utils.bytes.utf8.encode("pending_token_infos"));
     const [pendingTokensAccount, bump] = await web3.PublicKey.findProgramAddress(
+      [seed],
+      program.programId
+    );
+    try {
+      await program.rpc.voteFor(new anchor.BN(100), new web3.PublicKey("NTFuApVNdxXokk5GT7XD5cUUgXMBCoAz2LHeuAoKWRt"), {
+        accounts: {
+          pendingTokensAccount,
+        }
+      });
+      throw Error("Expected to get an error");
+    } catch (err) {
+      assert.equal(err.code, 301);
+    }
+  });
+
+  it("Does Allows crank to run", async () => {
+    const seed = Buffer.from(anchor.utils.bytes.utf8.encode("pending_token_infos"));
+    const [pendingTokensAccount, bump] = await web3.PublicKey.findProgramAddress(
+      [seed],
+      program.programId
+    );
+
+    const seed = Buffer.from(anchor.utils.bytes.utf8.encode("NTFuApVNdxXokk5GT7XD5cUUgXMBCoAz2LHeuAoKWRt"));
+    const [accountToCreate, bump] = await web3.PublicKey.findProgramAddress(
       [seed],
       program.programId
     );

@@ -5,6 +5,7 @@ import { withRouter, RouteComponentProps } from 'react-router-dom';
 
 const Header = styled.div`
   width: 96%;
+  margin: 0px auto;
   height: 40px;
   position: sticky;
   // background: ${Colors.darkBlue};

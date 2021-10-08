@@ -1,15 +1,16 @@
 import styled from 'styled-components';
 import Colors from 'common/colors';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useConnection } from 'common/Connection';
-import { proposeToken, getPendingTokenInfos, initialize } from 'api/api';
+import { proposeToken } from 'api/api';
 import { useWallet } from '@solana/wallet-adapter-react';
 import * as web3 from '@solana/web3.js';
-import { StyledButton } from 'common/Buttons';
 import { Alert } from 'antd';
-import { StyledSelect } from 'common/StyledSelect';
-import { LoadingBoundary } from 'common/LoadingBoundary';
 import { notify } from 'common/Notification';
+import { StyledSelect } from 'common/StyledSelect';
+import { StyledButton } from 'common/Buttons';
+import { LoadingBoundary } from 'common/LoadingBoundary';
+import { Initialized } from 'common/Initialized';
 
 const Layout = styled.div`
   width: 100%;
@@ -45,23 +46,7 @@ function Propose() {
   const [symbol, setSymbol] = useState("");
   const [imageUrl, setImageUrl] = useState("");
   const [tags, setTags] = useState([]);
-  const [isInitialized, setIsInitialized] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
-  useEffect(() => {
-    (async function checkInit() {
-      if (wallet.connected) {
-        await getPendingTokenInfos(wallet, connection)
-        .catch((e) => {
-          // todo CHECK TYPEOF E
-          if (e) {
-            console.log(e);
-            setIsInitialized(false);
-          }
-        })
-      }
-    })()
-  }, [wallet, connection]);
-
   return (
     <Layout>
       {error && (
@@ -107,7 +92,7 @@ function Propose() {
         <StyledButton disabled={!wallet || !wallet.connected} onClick={async () => {
           try {
             setIsLoading(true);
-            await proposeToken(wallet, connection, {
+            const txid = await proposeToken(wallet, connection, {
               splTokenProgramAddress: new web3.PublicKey(address),
               tokenName: name,
               tokenSymbol: symbol,
@@ -120,7 +105,7 @@ function Propose() {
             setSymbol("");
             setImageUrl("");
             setTags([]);
-            notify({ message: 'Succes', description: 'Token proposed succesfully', txid: '123'});
+            notify({ message: 'Succes', description: 'Token proposed succesfully', txid });
           } catch (e) {
             setIsLoading(false);
             setError(`${e}`);
@@ -128,17 +113,7 @@ function Propose() {
         }}>
           Submit
         </StyledButton>
-        {!isInitialized && (
-          <StyledButton disabled={!wallet || !wallet.connected} onClick={async () => {
-            try {
-              await initialize(wallet, connection)
-            } catch (e) {
-              setError(`${e}`);
-            }
-          }}>
-            Init
-          </StyledButton>
-        )}
+        <Initialized setError={setError} />
       </LoadingBoundary>
     </Layout>
   )

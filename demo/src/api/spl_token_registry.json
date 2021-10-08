@@ -13,7 +13,7 @@
         {
           "name": "user",
           "isMut": false,
-          "isSigner": false
+          "isSigner": true
         },
         {
           "name": "systemProgram",
@@ -67,6 +67,48 @@
           "type": "publicKey"
         }
       ]
+    },
+    {
+      "name": "checkVote",
+      "accounts": [
+        {
+          "name": "pendingTokensAccount",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "accountToCreate",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "user",
+          "isMut": false,
+          "isSigner": true
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "splTokenProgramAddress",
+          "type": "publicKey"
+        }
+      ]
+    },
+    {
+      "name": "cleanup",
+      "accounts": [
+        {
+          "name": "pendingTokensAccount",
+          "isMut": true,
+          "isSigner": false
+        }
+      ],
+      "args": []
     }
   ],
   "accounts": [
@@ -189,6 +231,6 @@
     }
   ],
   "metadata": {
-    "address": "Hat4JBCvCMe4NBWPUXo1SU8HH2ppQt2Zpc7DWGwUfvhB"
+    "address": "ru5MV6sy97YYhGx3WZjWV8jSzWaBShWyoofoapcqypz"
   }
 }
