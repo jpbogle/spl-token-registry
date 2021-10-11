@@ -6,4 +6,10 @@ export type PendingTokenInfo = {
   tokenInfo: TokenInfo,
   votes: anchor.BN,
   expiration: anchor.BN,
+  contributors: Array<PublicKey>,
+}
+
+export type PendingTokenAccount = {
+  pendingTokenInfos: Array<PendingTokenInfo>,
+  votingTokenMint: PublicKey,
 }

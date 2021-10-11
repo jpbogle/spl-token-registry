@@ -59,7 +59,7 @@ function Propose() {
       )}
       <LoadingBoundary loading={isLoading}>
         <StyledInput>
-          <div className="prompt">Address</div>
+          <div className="prompt">Mint Address</div>
           <input onChange={(e) => setAddress(e.target.value)} value={address}/>
         </StyledInput>
 
@@ -93,7 +93,7 @@ function Propose() {
           try {
             setIsLoading(true);
             const txid = await proposeToken(wallet, connection, {
-              splTokenProgramAddress: new web3.PublicKey(address),
+              mintAddress: new web3.PublicKey(address),
               tokenName: name,
               tokenSymbol: symbol,
               tokenImageUrl: imageUrl,
@@ -113,7 +113,7 @@ function Propose() {
         }}>
           Submit
         </StyledButton>
-        <Initialized setError={setError} />
+        <Initialized setError={setError} setLoading={setIsLoading} />
       </LoadingBoundary>
     </Layout>
   )

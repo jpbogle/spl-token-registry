@@ -1,31 +1,47 @@
 import * as web3 from '@solana/web3.js';
 import * as anchor from '@project-serum/anchor';
+import * as spl from "@solana/spl-token";
 import idl from './spl_token_registry.json';
 import { WalletContextState } from '@solana/wallet-adapter-react';
 import { TokenInfo } from './TokenInfo';
-import { PendingTokenInfo } from './PendingTokenInfo';
+import { PendingTokenAccount } from './PendingTokenInfo';
+import { TOKEN_PROGRAM_ID } from '@project-serum/serum/lib/token-instructions';
 
 const PROGRAM_ID = new web3.PublicKey(idl.metadata.address);
+let VOTING_TOKEN_MINT = new web3.PublicKey("517PfUgFP3f52xHQzjjBfbTTCSmSVPzo5JeeiQEE9KWs");
 // @ts-ignore
 const PROGRAM_IDL : anchor.Idl = idl;
 const PENDING_TOKEN_INFOS_SEED = "pending_token_infos";
-
-
 const CONFIRM_OPTIONS: web3.ConfirmOptions = {
   preflightCommitment: "processed",
 }
 
-export async function getProvider(wallet: anchor.Wallet) {
-  /* create the provider and return it to the caller */
-  /* network set to local network for now */
-  const network = "http://127.0.0.1:8899";
-  const connection = new web3.Connection(network, CONFIRM_OPTIONS.preflightCommitment);
-  const provider = new anchor.Provider(
-    connection, wallet, CONFIRM_OPTIONS,
-  );
-  return provider;
+const SPL_ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID: web3.PublicKey = new web3.PublicKey(
+  'ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL',
+);
+
+export async function findAssociatedTokenAddress(
+  walletAddress: web3.PublicKey,
+): Promise<web3.PublicKey> {
+  return (await web3.PublicKey.findProgramAddress(
+      [
+          walletAddress.toBuffer(),
+          TOKEN_PROGRAM_ID.toBuffer(),
+          VOTING_TOKEN_MINT.toBuffer(),
+      ],
+      SPL_ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID
+  ))[0];
 }
 
+export async function getAccountInfo(connection: web3.Connection, account: web3.PublicKey): Promise<spl.AccountInfo> {
+  const token = new spl.Token(connection, VOTING_TOKEN_MINT, TOKEN_PROGRAM_ID, null);
+  return await token.getAccountInfo(account);
+}
+
+export async function getMintInfo(connection: web3.Connection): Promise<spl.MintInfo> {
+  const token = new spl.Token(connection, VOTING_TOKEN_MINT, TOKEN_PROGRAM_ID, null);
+  return await token.getMintInfo();
+}
 
 export async function getPendingTokenAccountPubkey(): Promise<[web3.PublicKey, number]> {
   console.log(`Getting pending token infos PDA address for program ${PROGRAM_ID} and seed ${PENDING_TOKEN_INFOS_SEED}`);
@@ -36,17 +52,59 @@ export async function getPendingTokenAccountPubkey(): Promise<[web3.PublicKey, n
   return [seededPubkey, bump];
 }
 
-export async function initialize(wallet: WalletContextState, connection: web3.Connection) {
+export async function initialize(wallet: WalletContextState, connection: web3.Connection): Promise<string> {
   if (!wallet.connected) throw Error("Wallet not connected");
   const provider = new anchor.Provider(connection, wallet, CONFIRM_OPTIONS);
   const program = new anchor.Program(PROGRAM_IDL, PROGRAM_ID, provider);
   const [pendingTokensAccount, bump] = await getPendingTokenAccountPubkey();
-  await program.rpc.initialize({ seed: anchor.utils.bytes.utf8.encode(PENDING_TOKEN_INFOS_SEED), bump }, {
+  
+  // const token = new spl.Token(
+  //   provider.connection,
+  //   votingTokenMint.publicKey,
+  //   spl.TOKEN_PROGRAM_ID,
+  //   {
+  //     publicKey: provider.wallet.publicKey,
+  //     secretKey: Buffer.from("KKxQMhVRUYBGetdHV9Suf1XZjb7yygNu3nYRfBHpovoi2oyL99bY4SejLnQY5tzr7RCWqG4degCH7xuZzHQgAdG"),
+  //   }
+  // );
+
+  // create token account
+  const tokenMintPayer = anchor.web3.Keypair.generate();
+  if (!VOTING_TOKEN_MINT) {
+    const airdropSignature = await connection.requestAirdrop(tokenMintPayer.publicKey, web3.LAMPORTS_PER_SOL * 4);
+    await connection.confirmTransaction(airdropSignature);
+    const newMint = await spl.Token.createMint(
+      provider.connection,
+      tokenMintPayer,
+      tokenMintPayer.publicKey,
+      tokenMintPayer.publicKey,
+      2,
+      spl.TOKEN_PROGRAM_ID,
+    );
+    VOTING_TOKEN_MINT = newMint.publicKey;
+    console.log("Mint created", VOTING_TOKEN_MINT);
+
+    // mint tokens to user
+    const voterTokenAccount = await newMint.createAssociatedTokenAccount(provider.wallet.publicKey);
+    await newMint.mintTo( 
+      voterTokenAccount,
+      tokenMintPayer,
+      [],
+      1000,
+    );
+    console.log(`Account (${voterTokenAccount.toBase58()} received 1000 voting tokens`);
+  }
+
+  return program.rpc.initialize({ seed: anchor.utils.bytes.utf8.encode(PENDING_TOKEN_INFOS_SEED), bump }, {
     accounts: {
       pendingTokensAccount,
-      user: program.provider.wallet.publicKey,
+      user: provider.wallet.publicKey,
+      votingTokenMint: VOTING_TOKEN_MINT,
+      tokenProgram: spl.TOKEN_PROGRAM_ID,
+      rent: anchor.web3.SYSVAR_RENT_PUBKEY,
       systemProgram: anchor.web3.SystemProgram.programId,
-    }
+    },
+    // signers: [votingTokenMint],
   });
 }
 
@@ -62,14 +120,19 @@ export async function proposeToken(wallet: WalletContextState, connection: web3.
   });
 }
 
-export async function voteFor(wallet: WalletContextState, connection: web3.Connection, splTokenProgramAddress: web3.PublicKey, amount: number): Promise<string> {
+export async function voteFor(wallet: WalletContextState, connection: web3.Connection, splTokenProgramAddress: web3.PublicKey, votingTokenMint: web3.PublicKey): Promise<string> {
   if (!wallet.connected) throw Error("Wallet not connected");
   const provider = new anchor.Provider(connection, wallet, CONFIRM_OPTIONS);
   const program = new anchor.Program(PROGRAM_IDL, PROGRAM_ID, provider);
   const [pendingTokensAccount, _bump] = await getPendingTokenAccountPubkey();
-  return program.rpc.voteFor(new anchor.BN(amount), splTokenProgramAddress, {
+  const voterTokenAccount = await findAssociatedTokenAddress(provider.wallet.publicKey);
+  return program.rpc.voteFor(splTokenProgramAddress, {
     accounts: {
       pendingTokensAccount,
+      voterTokenAccount,
+      user: provider.wallet.publicKey,
+      votingTokenMint: votingTokenMint,
+      tokenProgram: spl.TOKEN_PROGRAM_ID,
     }
   });
 }
@@ -104,21 +167,22 @@ export async function getTokenInfos(connection: web3.Connection): Promise<Array<
   return resp.filter((i) => i != null);
 }
 
-export async function getPendingTokenInfos(connection: web3.Connection): Promise<Array<PendingTokenInfo>> {
+export async function getPendingTokenAccount(connection: web3.Connection): Promise<PendingTokenAccount> {
   const [pendingTokensAccount, _bump] = await getPendingTokenAccountPubkey();
   const provider = new anchor.Provider(connection, null, CONFIRM_OPTIONS);
   const program = new anchor.Program(PROGRAM_IDL, PROGRAM_ID, provider);
   const account = await program.account.pendingTokenInfos.fetch(pendingTokensAccount)
   // @ts-ignore
-  return account.pendingTokenInfos;
+  console.log(account.votingTokenMint.toBase58());
+  // @ts-ignore
+  return account;
 }
 
-export async function checkVote(wallet: WalletContextState, connection: web3.Connection, pendingTokenInfos: Array<PendingTokenInfo>): Promise<string> {
+export async function checkVote(wallet: WalletContextState, connection: web3.Connection, mintAddress: web3.PublicKey, votingTokenMint: web3.PublicKey): Promise<string> {
   if (!wallet.connected) throw Error("Wallet not connected");
   const provider = new anchor.Provider(connection, wallet, CONFIRM_OPTIONS);
   const program = new anchor.Program(PROGRAM_IDL, PROGRAM_ID, provider);
   const [pendingTokensAccount, _bump] = await getPendingTokenAccountPubkey();
-  const firstPassedVote = pendingTokenInfos.find((i) => i.votes.toNumber() >= 0);
 
   // const seed = Buffer.from(anchor.utils.bytes.utf8.encode(firstPassedVote.tokenInfo.splTokenProgramAddress.toBase58().substring(0,18)));
   // const [accountToCreate, bump] = await web3.PublicKey.findProgramAddress(
@@ -128,19 +192,37 @@ export async function checkVote(wallet: WalletContextState, connection: web3.Con
   // console.log("---->", web3.PublicKey.isOnCurve(accountToCreate.toBytes()), firstPassedVote, accountToCreate.toBase58(), bump);
   // console.log({seed, bump})
 
-  const accountToCreate = anchor.web3.Keypair.fromSeed(firstPassedVote.tokenInfo.splTokenProgramAddress.toBytes());
-  return await program.rpc.checkVote(firstPassedVote.tokenInfo.splTokenProgramAddress, {
+  const accountToCreate = anchor.web3.Keypair.fromSeed(mintAddress.toBytes());
+  return program.rpc.checkVote(mintAddress, {
     accounts: {
       pendingTokensAccount,
       accountToCreate: accountToCreate.publicKey,
       user: program.provider.wallet.publicKey,
+      votingTokenMint,
       systemProgram: anchor.web3.SystemProgram.programId,
     },
     signers: [accountToCreate],
+  })
+}
+
+export async function withdrawVotingBalace(wallet: WalletContextState, connection: web3.Connection, votingTokenMint: web3.PublicKey): Promise<string> {
+  if (!wallet.connected) throw Error("Wallet not connected");
+  const provider = new anchor.Provider(connection, wallet, CONFIRM_OPTIONS);
+  const program = new anchor.Program(PROGRAM_IDL, PROGRAM_ID, provider);
+  const [pendingTokensAccount, _bump] = await getPendingTokenAccountPubkey();
+  const voterTokenAccount = await findAssociatedTokenAddress(provider.wallet.publicKey);
+  return await program.rpc.withdrawVotingBalace({
+    accounts: {
+      pendingTokensAccount,
+      voterTokenAccount,
+      user: provider.wallet.publicKey,
+      votingTokenMint,
+      tokenProgram: spl.TOKEN_PROGRAM_ID,
+    }
   });
 }
 
-export async function cleanupExpired(wallet: WalletContextState, connection: web3.Connection): Promise<string> {
+export async function cleanupExpired(wallet: WalletContextState, connection: web3.Connection, votingTokenMint: web3.PublicKey): Promise<string> {
   if (!wallet.connected) throw Error("Wallet not connected");
   const provider = new anchor.Provider(connection, wallet, CONFIRM_OPTIONS);
   const program = new anchor.Program(PROGRAM_IDL, PROGRAM_ID, provider);
@@ -148,6 +230,7 @@ export async function cleanupExpired(wallet: WalletContextState, connection: web
   return await program.rpc.cleanup({
     accounts: {
       pendingTokensAccount,
+      votingTokenMint,
     }
   });
 }

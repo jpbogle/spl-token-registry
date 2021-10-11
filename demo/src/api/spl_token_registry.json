@@ -11,12 +11,27 @@
           "isSigner": false
         },
         {
+          "name": "votingTokenMint",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
           "name": "user",
           "isMut": false,
           "isSigner": true
         },
         {
+          "name": "rent",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
           "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "tokenProgram",
           "isMut": false,
           "isSigner": false
         }
@@ -55,18 +70,65 @@
           "name": "pendingTokensAccount",
           "isMut": true,
           "isSigner": false
+        },
+        {
+          "name": "voterTokenAccount",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "user",
+          "isMut": false,
+          "isSigner": true
+        },
+        {
+          "name": "votingTokenMint",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false
         }
       ],
       "args": [
         {
-          "name": "amount",
-          "type": "i64"
-        },
-        {
-          "name": "splTokenProgramAddress",
+          "name": "mintAddress",
           "type": "publicKey"
         }
       ]
+    },
+    {
+      "name": "withdrawVotingBalace",
+      "accounts": [
+        {
+          "name": "pendingTokensAccount",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "voterTokenAccount",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "user",
+          "isMut": false,
+          "isSigner": true
+        },
+        {
+          "name": "votingTokenMint",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": []
     },
     {
       "name": "checkVote",
@@ -87,6 +149,11 @@
           "isSigner": true
         },
         {
+          "name": "votingTokenMint",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
           "name": "systemProgram",
           "isMut": false,
           "isSigner": false
@@ -94,7 +161,7 @@
       ],
       "args": [
         {
-          "name": "splTokenProgramAddress",
+          "name": "mintAddress",
           "type": "publicKey"
         }
       ]
@@ -105,6 +172,11 @@
         {
           "name": "pendingTokensAccount",
           "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "votingTokenMint",
+          "isMut": false,
           "isSigner": false
         }
       ],
@@ -138,6 +210,10 @@
                 "defined": "PendingTokenInfo"
               }
             }
+          },
+          {
+            "name": "votingTokenMint",
+            "type": "publicKey"
           }
         ]
       }
@@ -171,7 +247,7 @@
         "kind": "struct",
         "fields": [
           {
-            "name": "splTokenProgramAddress",
+            "name": "mintAddress",
             "type": "publicKey"
           },
           {
@@ -213,6 +289,12 @@
           {
             "name": "votes",
             "type": "i64"
+          },
+          {
+            "name": "contributors",
+            "type": {
+              "vec": "publicKey"
+            }
           }
         ]
       }
@@ -228,6 +310,16 @@
       "code": 301,
       "name": "TokenNotFound",
       "msg": "Token not found."
+    },
+    {
+      "code": 302,
+      "name": "AccountAlreadyVoted",
+      "msg": "Account has already contributed to this vote."
+    },
+    {
+      "code": 303,
+      "name": "AccountStillVoting",
+      "msg": "Account still contributing to in progress vote."
     }
   ],
   "metadata": {

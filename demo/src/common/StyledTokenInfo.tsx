@@ -21,6 +21,7 @@ export const StyledTokenInfo = styled.div`
       border-radius: 50%;
       border: ${Colors.border};
       object-fit: cover;
+      background: ${Colors.darkBlue};
     }
   }
 
@@ -86,12 +87,25 @@ export const StyledTokenInfo = styled.div`
     border-radius: 16px;
     overflow: hidden;
     background: ${Colors.darkBlue};
+    position: relative;
+
     &:hover {
       cursor: pointer;
     }
 
+    .text {
+      height: 100%;
+      width: 100%;
+      position: absolute;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
     .progress {
       height: 100%;
+      width: 100%;
+      position: absolute;
       background: ${Colors.green};
       display: flex;
       align-items: center;

@@ -1,7 +1,7 @@
 import {  PublicKey } from '@solana/web3.js';
 
 export type TokenInfo = {
-  splTokenProgramAddress: PublicKey,
+  mintAddress: PublicKey,
   tokenName: string,
   tokenSymbol: string,
   tokenImageUrl: string,

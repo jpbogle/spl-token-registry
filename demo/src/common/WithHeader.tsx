@@ -2,11 +2,12 @@ import styled from 'styled-components';
 import Colors from 'common/colors';
 import { WalletMultiButton } from '@solana/wallet-adapter-react-ui';
 import { withRouter, RouteComponentProps } from 'react-router-dom';
+import { VotingPower } from './VotingPower';
 
 const Header = styled.div`
   width: 96%;
   margin: 0px auto;
-  height: 40px;
+  height: 60px;
   position: sticky;
   // background: ${Colors.darkBlue};
   color: ${Colors.white};
@@ -14,7 +15,7 @@ const Header = styled.div`
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 20px;
+  margin-bottom: 10px;
 
   #left {
     display: flex;
@@ -36,6 +37,14 @@ const Header = styled.div`
     padding-left: 10px;
     font-size: 20px;
     font-family: 'Karla', sans-serif;
+  }
+
+  #voting-power {
+    margin-left: 20px;
+    border: 1px solid ${Colors.borderColor};
+    border-radius: 10px;
+    background: ${Colors.darkBlue};
+    padding: 4px 8px;
   }
 `;
 
@@ -73,6 +82,7 @@ function WithHeader({ history, children, selected }: HeaderProps) {
         <div id="left">
           <img id="logo" src="assets/logo2.png" alt="SPL Token Names" />
           <span id="logo-text">SPL TOKEN REGISTRY</span>
+          <VotingPower />
         </div>
         <div id="right">
           <StyledLink selected={selected === HeaderLink.FIND} onClick={() => history.push('/')}>FIND</StyledLink>
