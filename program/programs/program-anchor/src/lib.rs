@@ -25,6 +25,7 @@ mod spl_token_registry {
         if pending_tokens_account.pending_token_infos.iter().any(|t| t.token_info.mint_address == token_info.mint_address) {
             return Err(ErrorCode::AddressAlreadyPending.into())
         }
+        // TODO check if it is an update
         let clock = Clock::get().unwrap();
         let timestamp = clock.unix_timestamp;
         let expiration = timestamp + DEFAULT_VOTE_EXPIRATION;
