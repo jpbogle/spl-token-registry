@@ -2,6 +2,7 @@
   "name": "demo",
   "version": "0.1.0",
   "private": true,
+  "homepage": ".",
   "dependencies": {
     "@project-serum/serum": "^0.13.57",
     "@solana/wallet-adapter-react": "^0.12.2",
