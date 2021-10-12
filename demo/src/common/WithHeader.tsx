@@ -4,6 +4,8 @@ import { WalletMultiButton } from '@solana/wallet-adapter-react-ui';
 import { withRouter, RouteComponentProps } from 'react-router-dom';
 import { VotingPower } from './VotingPower';
 import { EndpointSelector } from './EndpointSelector';
+import { useError } from './ErrorProvider';
+import Initialized from './Initialized';
 
 const Header = styled.div`
   width: 96%;
@@ -77,6 +79,7 @@ interface HeaderProps extends RouteComponentProps {
 };
 
 function WithHeader({ history, children, selected }: HeaderProps) {
+  const [error, setError] = useError();
   return (
     <>
       <Header>
@@ -84,11 +87,12 @@ function WithHeader({ history, children, selected }: HeaderProps) {
           <img id="logo" src="assets/logo2.png" alt="SPL Token Names" />
           <span id="logo-text">SPL TOKEN REGISTRY</span>
           <VotingPower />
+          <Initialized setLoading={() => {}}/>
         </div>
         <div id="right">
-          <StyledLink selected={selected === HeaderLink.FIND} onClick={() => history.push('/')}>FIND</StyledLink>
-          <StyledLink selected={selected === HeaderLink.VOTE} onClick={() => history.push('/vote')}>VOTE</StyledLink>
-          <StyledLink selected={selected === HeaderLink.PROPOSE} onClick={() => history.push('/propose')}>PROPOSE</StyledLink>
+          <StyledLink selected={selected === HeaderLink.FIND} onClick={() => { setError(null); history.push('/')} }>FIND</StyledLink>
+          <StyledLink selected={selected === HeaderLink.VOTE} onClick={() => { setError(null); history.push('/vote')} }>VOTE</StyledLink>
+          <StyledLink selected={selected === HeaderLink.PROPOSE} onClick={() => { setError(null); history.push('/propose')} }>PROPOSE</StyledLink>
           <WalletMultiButton style={{ fontSize: '14px', height: '35px' }}/>
           <EndpointSelector />
         </div>

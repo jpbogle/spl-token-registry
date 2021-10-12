@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useEnvironmentCtx } from 'common/Connection';
+import { useEnvironmentCtx } from 'common/EnvironmentProvider';
 import { StyledButton } from 'common/Buttons';
 import * as api from 'api/api';
 import { useWallet } from '@solana/wallet-adapter-react';
@@ -21,6 +21,7 @@ export function useVotingPower(): number {
         })
       }
     })()
+    return () => {};
   }, [wallet, ctx]);
   return votingPower;
 }

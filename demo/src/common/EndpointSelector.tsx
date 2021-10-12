@@ -1,4 +1,4 @@
-import { Environment, ENVIRONMENTS, useEnvironmentCtx } from 'common/Connection';
+import { Environment, ENVIRONMENTS, useEnvironmentCtx } from 'common/EnvironmentProvider';
 import { StyledSelect } from './StyledSelect';
 import styled from 'styled-components';
 

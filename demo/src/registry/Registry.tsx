@@ -1,15 +1,14 @@
-import styled from 'styled-components';
 import Colors from 'common/colors';
 import { useEffect, useState } from 'react';
-import { useEnvironmentCtx } from 'common/Connection';
+import { useEnvironmentCtx } from 'common/EnvironmentProvider';
 import * as api from 'api/api';
 import { LoadingBoundary } from 'common/LoadingBoundary';
 import { StyledSelect } from 'common/StyledSelect';
 import { StyledContainer } from 'common/StyledContainer';
 import { StyledTokenInfo } from 'common/StyledTokenInfo';
 import { FavoriteButton } from 'common/Buttons';
-import { Alert } from 'antd';
 import { TokenInfo } from 'api/TokenInfo';
+import { useError } from 'common/ErrorProvider';
 
 export function useTokenInfos(setLoading, setError): Array<TokenInfo> {
   const ctx = useEnvironmentCtx();
@@ -19,22 +18,24 @@ export function useTokenInfos(setLoading, setError): Array<TokenInfo> {
       if (ctx) {
         api.getTokenInfos(ctx).then((tokenInfos) => {
           setTokenInfos(tokenInfos);
-          setLoading(false);
         }).catch((e) => {
           setError(e);
           setTokenInfos([]);
-          setLoading(false);
-        })
+        }).finally(() => setLoading(false))
       }
     }, 1000);
     return () => clearInterval(interval);
   }, [ctx, setError, setLoading]);
+  useEffect(() => {
+    setLoading(true);
+    return () => {};
+  }, [ctx, setLoading]);
   return tokenInfos;
 }
 
 function Registry() {
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [error, setError] = useError();
   const tokenInfos = useTokenInfos(setLoading, setError);
   const [tags, setTags] = useState([]);
   const [favorites, setFavorites] = useState([]);
@@ -48,15 +49,7 @@ function Registry() {
   return (
     <>
       <StyledContainer>
-        {error && (
-          <Alert
-            style={{ marginBottom: '10px' }}
-            message="Error"
-            description={error.toString()}
-            type="error"
-            showIcon
-          />
-        )}
+        {error}
         <StyledSelect
           isMulti
           options={Array.from(tokenInfos.reduce((acc, f) => {

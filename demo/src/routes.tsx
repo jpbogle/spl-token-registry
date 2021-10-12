@@ -1,4 +1,5 @@
-import { ConnectionProvider } from 'common/Connection';
+import { EnvironmentContextProvider } from 'common/EnvironmentProvider';
+import { ErrorProvider } from 'common/ErrorProvider';
 import { getPhantomWallet } from '@solana/wallet-adapter-wallets';
 import { WalletProvider} from '@solana/wallet-adapter-react';
 import { WalletModalProvider } from '@solana/wallet-adapter-react-ui';
@@ -11,36 +12,38 @@ import Propose from 'registry/Propose';
 
 export default function Routes() {
   return (
-      <ConnectionProvider>
+      <EnvironmentContextProvider>
         <WalletProvider wallets={[getPhantomWallet()]} autoConnect>
           <WalletModalProvider>
-            <BrowserRouter basename={'/'}>
-              <Switch>
-                <Route exact path="/" component={() => (
-                  <WithHeader selected={HeaderLink.FIND}>
-                    <ErrorBoundary>
-                      <Registry />
-                    </ErrorBoundary>
-                  </WithHeader>
-                )} />
-                <Route exact path="/vote" component={() => (
-                  <WithHeader selected={HeaderLink.VOTE}>
-                    <ErrorBoundary>
-                      <Voting />
-                    </ErrorBoundary>
-                  </WithHeader>
-                )} />
-                <Route exact path="/propose" component={() => (
-                  <WithHeader selected={HeaderLink.PROPOSE}>
-                    <ErrorBoundary>
-                      <Propose />
-                    </ErrorBoundary>
-                  </WithHeader>
-                )} />
-              </Switch>
-            </BrowserRouter>
+            <ErrorProvider>
+              <BrowserRouter basename={'/'}>
+                <Switch>
+                  <Route exact path="/" component={() => (
+                    <WithHeader selected={HeaderLink.FIND}>
+                      <ErrorBoundary>
+                        <Registry />
+                      </ErrorBoundary>
+                    </WithHeader>
+                  )} />
+                  <Route exact path="/vote" component={() => (
+                    <WithHeader selected={HeaderLink.VOTE}>
+                      <ErrorBoundary>
+                        <Voting />
+                      </ErrorBoundary>
+                    </WithHeader>
+                  )} />
+                  <Route exact path="/propose" component={() => (
+                    <WithHeader selected={HeaderLink.PROPOSE}>
+                      <ErrorBoundary>
+                        <Propose />
+                      </ErrorBoundary>
+                    </WithHeader>
+                  )} />
+                </Switch>
+              </BrowserRouter>
+            </ErrorProvider>
           </WalletModalProvider>
         </WalletProvider>
-      </ConnectionProvider>
+      </EnvironmentContextProvider>
   );
 }

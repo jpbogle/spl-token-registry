@@ -1,11 +1,10 @@
 import Colors from 'common/colors';
 import { useEffect, useState } from 'react';
-import { useEnvironmentCtx } from 'common/Connection';
+import { useEnvironmentCtx } from 'common/EnvironmentProvider';
 import { useWallet } from '@solana/wallet-adapter-react';
 import * as api from 'api/api';
 import * as spl from "@solana/spl-token";
 import { PendingTokenAccount } from 'api/PendingTokenInfo';
-import { Alert } from 'antd';
 import { LoadingBoundary } from 'common/LoadingBoundary';
 import { StyledButton, FavoriteButton } from 'common/Buttons';
 import { StyledSelect } from 'common/StyledSelect';
@@ -13,7 +12,7 @@ import { StyledContainer } from 'common/StyledContainer';
 import { notify } from 'common/Notification';
 import { StyledTokenInfo } from 'common/StyledTokenInfo';
 import { Initialized } from 'common/Initialized';
-import { useError } from 'common/StyledError';
+import { useError } from 'common/ErrorProvider';
 
 export function usePendingAccount(setLoading, setError): PendingTokenAccount {
   const ctx = useEnvironmentCtx();
@@ -37,7 +36,11 @@ export function usePendingAccount(setLoading, setError): PendingTokenAccount {
         return pendingVotesInterval;
     }(), 1000);
     return () => clearInterval(interval);
-  }, [setLoading, setError, wallet, ctx]);
+  }, [setLoading, wallet, ctx, setError]);
+  useEffect(() => {
+    setLoading(true);
+    return () => {};
+  }, [ctx, setLoading]);
   return pendingTokenAccount;
 }
 
@@ -53,6 +56,7 @@ export function useVotingTokenMintInfo() : spl.MintInfo {
         .catch((e) => console.log(e));
       }
     })()
+    return () => {};
   }, [wallet, ctx]);
   return votingTokenMintInfo;
 }
@@ -61,6 +65,7 @@ function Voting() {
   const wallet = useWallet();
   const ctx = useEnvironmentCtx();
   const [loading, setLoading] = useState(null);
+  // const [error, setError] = useState(null);
   const [error, setError] = useError();
   const pendingTokenAccount = usePendingAccount(setLoading, setError);
   const votingTokenMintInfo = useVotingTokenMintInfo();
@@ -80,7 +85,7 @@ function Voting() {
   return (
     <>
       <StyledContainer>
-        {error && (
+        {/* {error && (
           <Alert
             style={{ marginBottom: '10px' }}
             message="Error"
@@ -88,7 +93,8 @@ function Voting() {
             type="error"
             showIcon
           />
-        )}
+        )} */}
+        {error}
         <StyledSelect
           isMulti
           // options={fundraisers.reduce((acc, f) => acc.concat(f.tags.map((t) => ({ label: t, value: t }))), [])}
@@ -101,7 +107,7 @@ function Voting() {
           placeholder="Find..."
         />
 
-        <div style={{ margin: '0px auto' }}><Initialized setError={setError} setLoading={setLoading} /></div>
+        {/* <div style={{ margin: '0px auto' }}><Initialized setError={setError} setLoading={setLoading} /></div> */}
         {sortedTokenInfos.some((i) => i.expiration.toNumber() <= UTC_seconds_now) && (
           <StyledButton style={{ marginLeft: 'auto', marginRight: 'auto' }} disabled={!wallet || !wallet.connected} onClick={async () => {
               try {

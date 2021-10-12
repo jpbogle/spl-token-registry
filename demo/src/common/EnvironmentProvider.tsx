@@ -10,19 +10,25 @@ export interface Environment {
 
 export interface EnvironmentContextValues {
   environment: Environment;
-  setEnvironment: (newEndpoint: Environment) => void;
+  setEnvironment: (newEnvironment: Environment) => void;
   connection: Connection;
 }
 
 export const ENVIRONMENTS: Environment[] = [
   {
-    label: 'prod',
-    value: 'https://api.solana.com',
+    label: 'mainnet',
+    value: 'https://api.mainnet-beta.solana.com',
     programId: new PublicKey('ru5MV6sy97YYhGx3WZjWV8jSzWaBShWyoofoapcqypz'),
   },
   {
     label: 'devnet',
     value: 'https://api.devnet.solana.com',
+    programId: new PublicKey('ru5MV6sy97YYhGx3WZjWV8jSzWaBShWyoofoapcqypz'),
+    votingTokenMint: new PublicKey('J68Fquq5EQ4hnYPEo68DWC6bbxBGPQUDqMFmFV5nhCrj'),
+  },
+  {
+    label: 'testnet',
+    value: 'https://api.testnet.solana.com',
     programId: new PublicKey('ru5MV6sy97YYhGx3WZjWV8jSzWaBShWyoofoapcqypz'),
     votingTokenMint: new PublicKey('J68Fquq5EQ4hnYPEo68DWC6bbxBGPQUDqMFmFV5nhCrj'),
   },
@@ -38,11 +44,11 @@ const EnvironmentContext: React.Context<null | EnvironmentContextValues> = React
   null,
 );
 
-export function ConnectionProvider({ children }) {
-  // could be used by endpoint selector
+export function EnvironmentContextProvider({ children }) {
+  // could be used by environment selector
   const [environment, setEnvironment] = useState(ENVIRONMENTS[1]);
 
-  // only update connection if endpoint changes
+  // only update connection if environment changes
   const connection = useMemo(() => new Connection(environment.value, 'recent'), [environment]);
 
   return (

@@ -1,11 +1,13 @@
 import { useState, useEffect } from 'react';
-import { useEnvironmentCtx } from 'common/Connection';
+import { useEnvironmentCtx } from 'common/EnvironmentProvider';
 import { getPendingTokenAccount, initialize } from 'api/api';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { StyledButton } from 'common/Buttons';
 import { notify } from './Notification';
+import { useError } from './ErrorProvider';
 
-export function Initialized({ setError, setLoading }) {
+export function Initialized({ setLoading }) {
+  const [error, handleError] = useError();
   const wallet = useWallet();
   const ctx = useEnvironmentCtx();
   const [isInitialized, setIsInitialized] = useState(true);
@@ -20,23 +22,24 @@ export function Initialized({ setError, setLoading }) {
         }
       });
     })()
+    return () => {};
   }, [wallet, ctx]);
 
   if (!isInitialized) {
     return (
-      <StyledButton disabled={!wallet || !wallet.connected} onClick={async () => {
+      <StyledButton style={{ margin: '0px 10px' }} disabled={!wallet || !wallet.connected} onClick={async () => {
         try {
-          setError(null);
+          handleError(null);
           setLoading(true);
           const txid = await initialize(wallet, ctx);
           notify({ message: 'Succes', description: 'Token governance program initialized', txid });
         } catch (e) {
-          setError(`${e}`);
+          handleError(`${e}`);
         } finally {
           setLoading(false);
         }
       }}>
-        Init
+        Init Program
       </StyledButton>
     )
   }

@@ -5,7 +5,7 @@ import idl from './spl_token_registry.json';
 import { WalletContextState } from '@solana/wallet-adapter-react';
 import { TokenInfo } from './TokenInfo';
 import { PendingTokenAccount } from './PendingTokenInfo';
-import { EnvironmentContextValues } from 'common/Connection';
+import { EnvironmentContextValues } from 'common/EnvironmentProvider';
 
 // const PROGRAM_ID = new web3.PublicKey(idl.metadata.address);
 // let VOTING_TOKEN_MINT = new web3.PublicKey("517PfUgFP3f52xHQzjjBfbTTCSmSVPzo5JeeiQEE9KWs");

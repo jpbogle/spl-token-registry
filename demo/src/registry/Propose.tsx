@@ -1,16 +1,16 @@
 import styled from 'styled-components';
 import Colors from 'common/colors';
 import { useState } from 'react';
-import { useEnvironmentCtx } from 'common/Connection';
+import { useEnvironmentCtx } from 'common/EnvironmentProvider';
 import { proposeToken } from 'api/api';
 import { useWallet } from '@solana/wallet-adapter-react';
 import * as web3 from '@solana/web3.js';
-import { Alert } from 'antd';
 import { notify } from 'common/Notification';
 import { StyledSelect } from 'common/StyledSelect';
 import { StyledButton } from 'common/Buttons';
 import { LoadingBoundary } from 'common/LoadingBoundary';
 import { Initialized } from 'common/Initialized';
+import { useError } from 'common/ErrorProvider';
 
 const Layout = styled.div`
   width: 100%;
@@ -38,7 +38,7 @@ const StyledInput = styled.div`
 `;
 
 function Propose() {
-  const [error, setError] = useState(null);
+  const [error, setError] = useError();
   const wallet = useWallet();
   const ctx = useEnvironmentCtx();
   const [address, setAddress] = useState("");
@@ -49,14 +49,7 @@ function Propose() {
   const [isLoading, setIsLoading] = useState(false);
   return (
     <Layout>
-      {error && (
-        <Alert
-          message="Error"
-          description={error}
-          type="error"
-          showIcon
-        />
-      )}
+      {error}
       <LoadingBoundary loading={isLoading}>
         <StyledInput>
           <div className="prompt">Mint Address</div>
@@ -113,7 +106,7 @@ function Propose() {
         }}>
           Submit
         </StyledButton>
-        <Initialized setError={setError} setLoading={setIsLoading} />
+        {/* <Initialized setError={setError} setLoading={setIsLoading} /> */}
       </LoadingBoundary>
     </Layout>
   )
