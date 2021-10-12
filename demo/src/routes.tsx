@@ -3,7 +3,7 @@ import { ErrorProvider } from 'common/ErrorProvider';
 import { getPhantomWallet } from '@solana/wallet-adapter-wallets';
 import { WalletProvider} from '@solana/wallet-adapter-react';
 import { WalletModalProvider } from '@solana/wallet-adapter-react-ui';
-import { BrowserRouter, Route, Switch } from 'react-router-dom';
+import { HashRouter, Route, Switch } from 'react-router-dom';
 import WithHeader, { HeaderLink } from 'common/WithHeader';
 import { ErrorBoundary } from 'common/ErrorBoundary';
 import Registry from 'registry/Registry';
@@ -16,7 +16,7 @@ export default function Routes() {
         <WalletProvider wallets={[getPhantomWallet()]} autoConnect>
           <WalletModalProvider>
             <ErrorProvider>
-              <BrowserRouter basename={'/'}>
+              <HashRouter basename={'/'}>
                 <Switch>
                   <Route exact path="/" component={() => (
                     <WithHeader selected={HeaderLink.FIND}>
@@ -40,7 +40,7 @@ export default function Routes() {
                     </WithHeader>
                   )} />
                 </Switch>
-              </BrowserRouter>
+              </HashRouter>
             </ErrorProvider>
           </WalletModalProvider>
         </WalletProvider>
