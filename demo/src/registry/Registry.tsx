@@ -1,7 +1,7 @@
 import styled from 'styled-components';
 import Colors from 'common/colors';
 import { useEffect, useState } from 'react';
-import { useConnection } from 'common/Connection';
+import { useEnvironmentCtx } from 'common/Connection';
 import * as api from 'api/api';
 import { LoadingBoundary } from 'common/LoadingBoundary';
 import { StyledSelect } from 'common/StyledSelect';
@@ -12,24 +12,27 @@ import { Alert } from 'antd';
 import { TokenInfo } from 'api/TokenInfo';
 
 export function useTokenInfos(setLoading, setError): Array<TokenInfo> {
-  const connection = useConnection();
+  const ctx = useEnvironmentCtx();
   const [tokenInfos, setTokenInfos] = useState([]);
   useEffect(() => {
     const interval = setInterval(() => {
-      if (connection) {
-        api.getTokenInfos(connection).then((tokenInfos) => {
+      if (ctx) {
+        api.getTokenInfos(ctx).then((tokenInfos) => {
           setTokenInfos(tokenInfos);
           setLoading(false);
-        }).catch((e) => setError(e))
+        }).catch((e) => {
+          setError(e);
+          setTokenInfos([]);
+          setLoading(false);
+        })
       }
     }, 1000);
     return () => clearInterval(interval);
-  }, [connection]);
+  }, [ctx, setError, setLoading]);
   return tokenInfos;
 }
 
 function Registry() {
-  const connection = useConnection();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const tokenInfos = useTokenInfos(setLoading, setError);
@@ -45,6 +48,15 @@ function Registry() {
   return (
     <>
       <StyledContainer>
+        {error && (
+          <Alert
+            style={{ marginBottom: '10px' }}
+            message="Error"
+            description={error.toString()}
+            type="error"
+            showIcon
+          />
+        )}
         <StyledSelect
           isMulti
           options={Array.from(tokenInfos.reduce((acc, f) => {
@@ -55,14 +67,6 @@ function Registry() {
           value={tags.map((t) => ({label: t, value: t}))}
           placeholder="Find..."
         />
-        {error && (
-          <Alert
-            message="Error"
-            description={error}
-            type="error"
-            showIcon
-          />
-        )}
         <LoadingBoundary loading={loading}>
         <>
           {sortedTokenInfos.map(f => (

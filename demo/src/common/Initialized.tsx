@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useConnection } from 'common/Connection';
+import { useEnvironmentCtx } from 'common/Connection';
 import { getPendingTokenAccount, initialize } from 'api/api';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { StyledButton } from 'common/Buttons';
@@ -7,11 +7,12 @@ import { notify } from './Notification';
 
 export function Initialized({ setError, setLoading }) {
   const wallet = useWallet();
-  const connection = useConnection();
+  const ctx = useEnvironmentCtx();
   const [isInitialized, setIsInitialized] = useState(true);
   useEffect(() => {
     (async function checkInit() {
-      await getPendingTokenAccount(connection)
+      setIsInitialized(true);
+      await getPendingTokenAccount(ctx)
       .catch((e) => {
         // todo CHECK TYPEOF E
         if (e) {
@@ -19,7 +20,7 @@ export function Initialized({ setError, setLoading }) {
         }
       });
     })()
-  }, [wallet, connection]);
+  }, [wallet, ctx]);
 
   if (!isInitialized) {
     return (
@@ -27,8 +28,8 @@ export function Initialized({ setError, setLoading }) {
         try {
           setError(null);
           setLoading(true);
-          const txid = await initialize(wallet, connection);
-          notify({ message: 'Succes', description: 'Token proposed succesfully', txid });
+          const txid = await initialize(wallet, ctx);
+          notify({ message: 'Succes', description: 'Token governance program initialized', txid });
         } catch (e) {
           setError(`${e}`);
         } finally {

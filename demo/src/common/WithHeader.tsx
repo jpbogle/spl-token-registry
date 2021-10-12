@@ -3,6 +3,7 @@ import Colors from 'common/colors';
 import { WalletMultiButton } from '@solana/wallet-adapter-react-ui';
 import { withRouter, RouteComponentProps } from 'react-router-dom';
 import { VotingPower } from './VotingPower';
+import { EndpointSelector } from './EndpointSelector';
 
 const Header = styled.div`
   width: 96%;
@@ -89,6 +90,7 @@ function WithHeader({ history, children, selected }: HeaderProps) {
           <StyledLink selected={selected === HeaderLink.VOTE} onClick={() => history.push('/vote')}>VOTE</StyledLink>
           <StyledLink selected={selected === HeaderLink.PROPOSE} onClick={() => history.push('/propose')}>PROPOSE</StyledLink>
           <WalletMultiButton style={{ fontSize: '14px', height: '35px' }}/>
+          <EndpointSelector />
         </div>
       </Header>
       {children}

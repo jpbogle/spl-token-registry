@@ -1,7 +1,7 @@
 import styled from 'styled-components';
 import Colors from 'common/colors';
 import { useState } from 'react';
-import { useConnection } from 'common/Connection';
+import { useEnvironmentCtx } from 'common/Connection';
 import { proposeToken } from 'api/api';
 import { useWallet } from '@solana/wallet-adapter-react';
 import * as web3 from '@solana/web3.js';
@@ -40,7 +40,7 @@ const StyledInput = styled.div`
 function Propose() {
   const [error, setError] = useState(null);
   const wallet = useWallet();
-  const connection = useConnection();
+  const ctx = useEnvironmentCtx();
   const [address, setAddress] = useState("");
   const [name, setName] = useState("");
   const [symbol, setSymbol] = useState("");
@@ -79,7 +79,7 @@ function Propose() {
         </StyledInput>
 
         <StyledInput>
-          <div className="prompt">Image URL</div>
+          <div className="prompt">Tags</div>
           <StyledSelect
             style={{"marginTop": "10px"}}
             isMulti
@@ -89,10 +89,10 @@ function Propose() {
             placeholder="Tags..."
           />
         </StyledInput>
-        <StyledButton disabled={!wallet || !wallet.connected} onClick={async () => {
+        <StyledButton style={{ marginBottom: '0px' }} disabled={!wallet || !wallet.connected} onClick={async () => {
           try {
             setIsLoading(true);
-            const txid = await proposeToken(wallet, connection, {
+            const txid = await proposeToken(wallet, ctx, {
               mintAddress: new web3.PublicKey(address),
               tokenName: name,
               tokenSymbol: symbol,

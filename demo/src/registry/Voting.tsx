@@ -1,6 +1,6 @@
 import Colors from 'common/colors';
 import { useEffect, useState } from 'react';
-import { useConnection } from 'common/Connection';
+import { useEnvironmentCtx } from 'common/Connection';
 import { useWallet } from '@solana/wallet-adapter-react';
 import * as api from 'api/api';
 import * as spl from "@solana/spl-token";
@@ -13,52 +13,55 @@ import { StyledContainer } from 'common/StyledContainer';
 import { notify } from 'common/Notification';
 import { StyledTokenInfo } from 'common/StyledTokenInfo';
 import { Initialized } from 'common/Initialized';
+import { useError } from 'common/StyledError';
 
 export function usePendingAccount(setLoading, setError): PendingTokenAccount {
-  const connection = useConnection();
+  const ctx = useEnvironmentCtx();
   const wallet = useWallet();
   const [pendingTokenAccount, setPendingTokenAccount] = useState(null);
   useEffect(() => {
     const interval = setInterval(
       function pendingVotesInterval(): any {
-        if (connection) {
-          api.getPendingTokenAccount(connection)
+        if (ctx) {
+          api.getPendingTokenAccount(ctx)
           .then((pendingVotes) => {
             setPendingTokenAccount(pendingVotes);
             setLoading([]);
           })
           .catch((e) => {
             setLoading([]);
+            setPendingTokenAccount(null);
             setError(`${e}`);
           });
         }
         return pendingVotesInterval;
     }(), 1000);
     return () => clearInterval(interval);
-  }, [setLoading, setError, wallet, connection]);
+  }, [setLoading, setError, wallet, ctx]);
   return pendingTokenAccount;
 }
 
 export function useVotingTokenMintInfo() : spl.MintInfo {
   const wallet = useWallet();
-  const connection = useConnection();
+  const ctx = useEnvironmentCtx();
   const [votingTokenMintInfo, setVotingTokenMintInfo] = useState(null);
   useEffect(() => {
     (async function checkInit() {
       if (wallet && wallet.connected) {
-        const mintInfo = await api.getMintInfo(connection);
-        setVotingTokenMintInfo(mintInfo);
+        api.getMintInfo(ctx)
+        .then((mintInfo) => setVotingTokenMintInfo(mintInfo))
+        .catch((e) => console.log(e));
       }
     })()
-  }, [wallet, connection]);
+  }, [wallet, ctx]);
   return votingTokenMintInfo;
 }
 
 function Voting() {
   const wallet = useWallet();
-  const connection = useConnection();
+  const ctx = useEnvironmentCtx();
   const [loading, setLoading] = useState(null);
-  const [error, setError] = useState(null);
+  const [error, setError] = useError();
   const pendingTokenAccount = usePendingAccount(setLoading, setError);
   const votingTokenMintInfo = useVotingTokenMintInfo();
   const [tags, setTags] = useState([]);
@@ -77,6 +80,15 @@ function Voting() {
   return (
     <>
       <StyledContainer>
+        {error && (
+          <Alert
+            style={{ marginBottom: '10px' }}
+            message="Error"
+            description={error.toString()}
+            type="error"
+            showIcon
+          />
+        )}
         <StyledSelect
           isMulti
           // options={fundraisers.reduce((acc, f) => acc.concat(f.tags.map((t) => ({ label: t, value: t }))), [])}
@@ -88,20 +100,13 @@ function Voting() {
           value={tags.map((t) => ({label: t, value: t}))}
           placeholder="Find..."
         />
-        {error && (
-          <Alert
-            message="Error"
-            description={error}
-            type="error"
-            showIcon
-          />
-        )}
+
         <div style={{ margin: '0px auto' }}><Initialized setError={setError} setLoading={setLoading} /></div>
         {sortedTokenInfos.some((i) => i.expiration.toNumber() <= UTC_seconds_now) && (
-          <StyledButton style={{ margin: '10px auto' }} disabled={!wallet || !wallet.connected} onClick={async () => {
+          <StyledButton style={{ marginLeft: 'auto', marginRight: 'auto' }} disabled={!wallet || !wallet.connected} onClick={async () => {
               try {
                 setError(null);
-                const txid = await api.cleanupExpired(wallet, connection, pendingTokenAccount.votingTokenMint);
+                const txid = await api.cleanupExpired(wallet, ctx, pendingTokenAccount.votingTokenMint);
                 setLoading(null);
                 notify({ message: 'Succes', description: 'You have cleaned up expired tokens. Be sure to check votes on those that are complete', txid });
               } catch (e) {
@@ -145,7 +150,7 @@ function Voting() {
                       <StyledButton width="100px" disabled={!wallet || !wallet.connected} onClick={async () => {
                         try {
                           setError(null);
-                          const txid = await api.voteFor(wallet, connection, f.tokenInfo.mintAddress, pendingTokenAccount.votingTokenMint);
+                          const txid = await api.voteFor(wallet, ctx, f.tokenInfo.mintAddress, pendingTokenAccount.votingTokenMint);
                           setLoading([...loading, f.tokenInfo.mintAddress.toBase58()])
                           notify({ message: 'Succes', description: 'You have voted for this token', txid });
                         } catch (e) {
@@ -158,7 +163,7 @@ function Voting() {
                         <StyledButton disabled={!wallet || !wallet.connected} onClick={async () => {
                             try {
                               setError(null);
-                              const txid = await api.checkVote(wallet, connection, f.tokenInfo.mintAddress, pendingTokenAccount.votingTokenMint);
+                              const txid = await api.checkVote(wallet, ctx, f.tokenInfo.mintAddress, pendingTokenAccount.votingTokenMint);
                               setLoading([...loading, f.tokenInfo.mintAddress.toBase58()])
                               notify({ message: 'Succes', description: 'You have attempted to check the vote for this token', txid });
                             } catch (e) {

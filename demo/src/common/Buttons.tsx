@@ -36,7 +36,7 @@ export const StyledButton = styled.div<ButtonProps>`
   align-items: center;
   width: ${(props) => props.width || '100px'};
   justify-content: center;
-  padding: 5px;
+  padding: 5px 8px;
   background: ${Colors.btnDisabled};
 
   &:hover {

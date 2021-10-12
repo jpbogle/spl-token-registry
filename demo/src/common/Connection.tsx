@@ -1,56 +1,67 @@
 import React, { useMemo, useState, useContext } from 'react';
-import { Connection } from '@solana/web3.js';
+import { Connection, PublicKey } from '@solana/web3.js';
 
-export interface Endpoint {
-  name: string;
+export interface Environment {
+  label: string;
   value: string;
+  programId: PublicKey,
+  votingTokenMint?: PublicKey,
 }
 
-export interface ConnectionContextValues {
-  endpoint: Endpoint;
-  setEndpoint: (newEndpoint: Endpoint) => void;
+export interface EnvironmentContextValues {
+  environment: Environment;
+  setEnvironment: (newEndpoint: Environment) => void;
   connection: Connection;
 }
 
-export const ENDPOINTS: Endpoint[] = [
+export const ENVIRONMENTS: Environment[] = [
   {
-    name: 'mainnet-beta',
-    value: 'https://solana-api.projectserum.com',
+    label: 'prod',
+    value: 'https://api.solana.com',
+    programId: new PublicKey('ru5MV6sy97YYhGx3WZjWV8jSzWaBShWyoofoapcqypz'),
   },
   {
-    name: 'localnet',
+    label: 'devnet',
+    value: 'https://api.devnet.solana.com',
+    programId: new PublicKey('ru5MV6sy97YYhGx3WZjWV8jSzWaBShWyoofoapcqypz'),
+    votingTokenMint: new PublicKey('J68Fquq5EQ4hnYPEo68DWC6bbxBGPQUDqMFmFV5nhCrj'),
+  },
+  {
+    label: 'localnet',
     value: 'http://127.0.0.1:8899',
+    programId: new PublicKey('ru5MV6sy97YYhGx3WZjWV8jSzWaBShWyoofoapcqypz'),
+    votingTokenMint: new PublicKey('517PfUgFP3f52xHQzjjBfbTTCSmSVPzo5JeeiQEE9KWs'),
   },
 ];
 
-const ConnectionContext: React.Context<null | ConnectionContextValues> = React.createContext<null | ConnectionContextValues>(
+const EnvironmentContext: React.Context<null | EnvironmentContextValues> = React.createContext<null | EnvironmentContextValues>(
   null,
 );
 
 export function ConnectionProvider({ children }) {
   // could be used by endpoint selector
-  const [endpoint, setEndpoint] = useState(ENDPOINTS[1]);
+  const [environment, setEnvironment] = useState(ENVIRONMENTS[1]);
 
   // only update connection if endpoint changes
-  const connection = useMemo(() => new Connection(endpoint.value, 'recent'), [endpoint]);
+  const connection = useMemo(() => new Connection(environment.value, 'recent'), [environment]);
 
   return (
-    <ConnectionContext.Provider
+    <EnvironmentContext.Provider
       value={{
-        endpoint,
-        setEndpoint,
+        environment,
+        setEnvironment,
         connection,
       }}
     >
       {children}
-    </ConnectionContext.Provider>
+    </EnvironmentContext.Provider>
   );
 }
 
-export function useConnection() {
-  const context = useContext(ConnectionContext);
+export function useEnvironmentCtx(): EnvironmentContextValues {
+  const context = useContext(EnvironmentContext);
   if (!context) {
     throw new Error('Missing connection context');
   }
-  return context.connection;
+  return context;
 }
