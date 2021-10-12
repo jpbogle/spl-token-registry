@@ -38,7 +38,7 @@ export function usePendingAccount(setLoading, setError): PendingTokenAccount {
     return () => clearInterval(interval);
   }, [setLoading, wallet, ctx, setError]);
   useEffect(() => {
-    setLoading(true);
+    setLoading(null);
     return () => {};
   }, [ctx, setLoading]);
   return pendingTokenAccount;
@@ -80,6 +80,7 @@ function Voting() {
     else if (favorites.includes(f2.tokenInfo.mintAddress)) return 1
     else return 0;
   });
+  console.log(loading);
 
   const UTC_seconds_now = Math.floor(Date.now() / 1000);
   return (
