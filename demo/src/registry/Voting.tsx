@@ -50,11 +50,9 @@ export function useVotingTokenMintInfo() : spl.MintInfo {
   const [votingTokenMintInfo, setVotingTokenMintInfo] = useState(null);
   useEffect(() => {
     (async function checkInit() {
-      if (wallet && wallet.connected) {
-        api.getMintInfo(ctx)
-        .then((mintInfo) => setVotingTokenMintInfo(mintInfo))
-        .catch((e) => console.log(e));
-      }
+      api.getMintInfo(ctx)
+      .then((mintInfo) => setVotingTokenMintInfo(mintInfo))
+      .catch((e) => console.log(e));
     })()
     return () => {};
   }, [wallet, ctx]);
@@ -75,9 +73,9 @@ function Voting() {
   const pendingTokenInfos = (pendingTokenAccount && pendingTokenAccount.pendingTokenInfos) || [];
   const filteredTokenInfos = tags.length > 0 ? pendingTokenInfos.filter((f) => tags.some(t => f.tokenInfo.tags.includes(t))) : pendingTokenInfos;
   const sortedTokenInfos = [...filteredTokenInfos].sort((f1, f2) => {
-    if (favorites.includes(f1.tokenInfo.mintAddress) && favorites.includes(f2.tokenInfo.mintAddress)) return 0;
-    else if (favorites.includes(f1.tokenInfo.mintAddress)) return -1
-    else if (favorites.includes(f2.tokenInfo.mintAddress)) return 1
+    if (favorites.includes(f1.tokenInfo.mintAddress.toBase58()) && favorites.includes(f2.tokenInfo.mintAddress.toBase58())) return 0;
+    else if (favorites.includes(f1.tokenInfo.mintAddress.toBase58())) return -1
+    else if (favorites.includes(f2.tokenInfo.mintAddress.toBase58())) return 1
     else return 0;
   });
   console.log(loading);
@@ -148,7 +146,7 @@ function Voting() {
                         ))}
                       </div>
                     }
-                    <FavoriteButton onClick={() => favorites.includes(f.tokenInfo.mintAddress) ? setFavorites(favorites.filter((fav) => fav !== f.tokenInfo.mintAddress)) : setFavorites([...favorites, f.tokenInfo.mintAddress])} selected={favorites.includes(f.tokenInfo.mintAddress)}>
+                    <FavoriteButton onClick={() => favorites.includes(f.tokenInfo.mintAddress.toBase58()) ? setFavorites(favorites.filter((fav) => fav !== f.tokenInfo.mintAddress.toBase58())) : setFavorites([...favorites, f.tokenInfo.mintAddress.toBase58()])} selected={favorites.includes(f.tokenInfo.mintAddress.toBase58())}>
                       <svg className="Icon_icon__2NnUo inline-block mr-1 h-3 w-3 align-baseline PlayerSummary_favoritedDisabled__3-f5T" role="img" aria-label="Favorite Player Button Star" xmlns="http://www.w3.org/2000/svg" width="8" height="8" viewBox="0 0 8 8">
                         <path fillRule="evenodd" d="M4 6L1.649 7.236l.449-2.618L.196 2.764l2.628-.382L4 0l1.176 2.382 2.628.382-1.902 1.854.45 2.618z"></path>
                       </svg>
