@@ -60,7 +60,7 @@ export function VotingPower() {
         </StyledButton>
       )
     } else {
-      return <div id="voting-power">Voting Power: {votingPower} STRVC</div>
+      return <div id="voting-power">Voting Power: {votingPower} SVOTE</div>
     }
   } else {
     return <></>
