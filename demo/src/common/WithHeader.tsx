@@ -84,7 +84,7 @@ function WithHeader({ history, children, selected }: HeaderProps) {
     <>
       <Header>
         <div id="left">
-          <img id="logo" src="assets/logo2.png" alt="SPL Token Names" />
+          <img id="logo" src="assets/logo4.png" alt="SPL Token Names" />
           <span id="logo-text">SPL TOKEN REGISTRY</span>
           <VotingPower />
           <Initialized setLoading={() => {}}/>

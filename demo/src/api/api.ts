@@ -73,7 +73,7 @@ export async function initMint(wallet: WalletContextState, ctx: EnvironmentConte
   if (!wallet.connected) throw Error("Wallet not connected");
   const provider = new anchor.Provider(ctx.connection, wallet, CONFIRM_OPTIONS);
   const tokenMintPayer = anchor.web3.Keypair.generate();
-  const airdropSignature = await ctx.connection.requestAirdrop(tokenMintPayer.publicKey, web3.LAMPORTS_PER_SOL * 4);
+  const airdropSignature = await ctx.connection.requestAirdrop(tokenMintPayer.publicKey, web3.LAMPORTS_PER_SOL);
   await ctx.connection.confirmTransaction(airdropSignature);
   const newMint = await spl.Token.createMint(
     provider.connection,
@@ -204,12 +204,13 @@ export async function getTokenInfos(ctx: EnvironmentContextValues): Promise<Arra
       // @ts-ignore
       return data.tokenInfo;
     } catch (e) {
-      console.log(`Error fetching account ${account.pubkey}: ${e}`);
+      console.log(`Error mapping account ${account.pubkey}: ${e}`);
       return null;
     }
   }));
   // @ts-ignore
-  return resp.filter((i) => i != null);
+  const filteredResp = resp.filter((i) => i != null);
+  return filteredResp.sort((a, b) => a.tokenName.localeCompare(b.tokenName));
 }
 
 export async function getPendingTokenAccount(ctx: EnvironmentContextValues): Promise<PendingTokenAccount> {

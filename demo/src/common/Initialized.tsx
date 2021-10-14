@@ -7,7 +7,7 @@ import { notify } from './Notification';
 import { useError } from './ErrorProvider';
 
 export function Initialized({ setLoading }) {
-  const [error, handleError] = useError();
+  const [error, setError] = useError();
   const wallet = useWallet();
   const ctx = useEnvironmentCtx();
   const [isInitialized, setIsInitialized] = useState(true);
@@ -29,12 +29,13 @@ export function Initialized({ setLoading }) {
     return (
       <StyledButton style={{ margin: '0px 10px' }} disabled={!wallet || !wallet.connected} onClick={async () => {
         try {
-          handleError(null);
+          setError(null);
           setLoading(true);
           const txid = await initialize(wallet, ctx);
           notify({ message: 'Succes', description: 'Token governance program initialized', txid });
+          setIsInitialized(true);
         } catch (e) {
-          handleError(`${e}`);
+          setError(`${e}`);
         } finally {
           setLoading(false);
         }

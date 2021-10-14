@@ -30,7 +30,7 @@ export const ENVIRONMENTS: Environment[] = [
     label: 'testnet',
     value: 'https://api.testnet.solana.com',
     programId: new PublicKey('ru5MV6sy97YYhGx3WZjWV8jSzWaBShWyoofoapcqypz'),
-    votingTokenMint: new PublicKey('J68Fquq5EQ4hnYPEo68DWC6bbxBGPQUDqMFmFV5nhCrj'),
+    votingTokenMint: new PublicKey('FSEuiPuTgqSbLbC89jgZ3umR6meYa69JwK7qVqayvjow'),
   },
   {
     label: 'localnet',
