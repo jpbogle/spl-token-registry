@@ -7,8 +7,6 @@ import { TokenInfo } from './TokenInfo';
 import { PendingTokenAccount } from './PendingTokenInfo';
 import { EnvironmentContextValues } from 'common/EnvironmentProvider';
 
-// const PROGRAM_ID = new web3.PublicKey(idl.metadata.address);
-// let VOTING_TOKEN_MINT = new web3.PublicKey("517PfUgFP3f52xHQzjjBfbTTCSmSVPzo5JeeiQEE9KWs");
 // @ts-ignore
 const PROGRAM_IDL : anchor.Idl = idl;
 const PENDING_TOKEN_INFOS_SEED = "pending_token_infos";
@@ -41,7 +39,6 @@ export async function getMintInfo(ctx: EnvironmentContextValues): Promise<spl.Mi
 }
 
 export async function getPendingTokenAccountPubkey(programId: web3.PublicKey): Promise<[web3.PublicKey, number]> {
-  console.log(`Getting pending token infos PDA address for program ${programId} and seed ${PENDING_TOKEN_INFOS_SEED}`);
   let [seededPubkey, bump] = await web3.PublicKey.findProgramAddress(
     [anchor.utils.bytes.utf8.encode(PENDING_TOKEN_INFOS_SEED)],
     programId,
@@ -91,7 +88,7 @@ export async function initMint(wallet: WalletContextState, ctx: EnvironmentConte
     voterTokenAccount,
     tokenMintPayer,
     [],
-    1000,
+    100000,
   );
   console.log(`Account ${voterTokenAccount.toBase58()} received 1000 voting tokens mint ${newMint.publicKey.toBase58()}`);
   return newMint.publicKey
@@ -158,7 +155,7 @@ export async function proposeToken(wallet: WalletContextState, ctx: EnvironmentC
   const provider = new anchor.Provider(ctx.connection, wallet, CONFIRM_OPTIONS);
   const program = new anchor.Program(PROGRAM_IDL, ctx.environment.programId, provider);
   const [pendingTokensAccount, _bump] = await getPendingTokenAccountPubkey(ctx.environment.programId);
-  return await program.rpc.propose(tokenInfo, {
+  return await program.rpc.propose({ tokenInfo, voteType: new anchor.BN(0) }, {
     accounts: {
       pendingTokensAccount,
     },
@@ -176,7 +173,7 @@ export async function voteFor(wallet: WalletContextState, ctx: EnvironmentContex
       pendingTokensAccount,
       voterTokenAccount,
       user: provider.wallet.publicKey,
-      votingTokenMint: votingTokenMint,
+      votingTokenMint,
       tokenProgram: spl.TOKEN_PROGRAM_ID,
     }
   });
@@ -217,9 +214,7 @@ export async function getPendingTokenAccount(ctx: EnvironmentContextValues): Pro
   const [pendingTokensAccount, _bump] = await getPendingTokenAccountPubkey(ctx.environment.programId);
   const provider = new anchor.Provider(ctx.connection, null, CONFIRM_OPTIONS);
   const program = new anchor.Program(PROGRAM_IDL, ctx.environment.programId, provider);
-  const account = await program.account.pendingTokenInfos.fetch(pendingTokensAccount)
-  // @ts-ignore
-  console.log(account.votingTokenMint.toBase58());
+  const account = await program.account.pendingTokenInfos.fetch(pendingTokensAccount);
   // @ts-ignore
   return account;
 }
@@ -231,23 +226,44 @@ export async function checkVote(wallet: WalletContextState, ctx: EnvironmentCont
   const [pendingTokensAccount, _bump] = await getPendingTokenAccountPubkey(ctx.environment.programId);
 
   // const seed = Buffer.from(anchor.utils.bytes.utf8.encode(firstPassedVote.tokenInfo.splTokenProgramAddress.toBase58().substring(0,18)));
-  // const [accountToCreate, bump] = await web3.PublicKey.findProgramAddress(
+  // const [currentTokenInfo, bump] = await web3.PublicKey.findProgramAddress(
   //   [seed],
   //   PROGRAM_ID
   // );
-  // console.log("---->", web3.PublicKey.isOnCurve(accountToCreate.toBytes()), firstPassedVote, accountToCreate.toBase58(), bump);
+  // console.log("---->", web3.PublicKey.isOnCurve(currentTokenInfo.toBytes()), firstPassedVote, currentTokenInfo.toBase58(), bump);
   // console.log({seed, bump})
 
-  const accountToCreate = anchor.web3.Keypair.fromSeed(mintAddress.toBytes());
-  return program.rpc.checkVote(mintAddress, {
+  const currentTokenInfo = anchor.web3.Keypair.fromSeed(mintAddress.toBytes());
+  const accountInfo = await program.account.tokenInfoAccount.fetch(currentTokenInfo.publicKey).catch((e) => console.log("Assuming new token account", e));
+  if (accountInfo) {
+    return program.rpc.checkUpdateVote(mintAddress, {
+      accounts: {
+        pendingTokensAccount,
+        currentTokenInfo: currentTokenInfo.publicKey,
+        user: program.provider.wallet.publicKey,
+        votingTokenMint,
+        systemProgram: anchor.web3.SystemProgram.programId,
+      }
+    });
+    // return program.rpc.checkDeleteVote(mintAddress, {
+    //   accounts: {
+    //     pendingTokensAccount,
+    //     currentTokenInfo: currentTokenInfo.publicKey,
+    //     user: program.provider.wallet.publicKey,
+    //     votingTokenMint,
+    //     systemProgram: anchor.web3.SystemProgram.programId,
+    //   }
+    // });
+  }
+  return program.rpc.checkCreateVote(mintAddress, {
     accounts: {
       pendingTokensAccount,
-      accountToCreate: accountToCreate.publicKey,
+      currentTokenInfo: currentTokenInfo.publicKey,
       user: program.provider.wallet.publicKey,
       votingTokenMint,
       systemProgram: anchor.web3.SystemProgram.programId,
     },
-    signers: [accountToCreate],
+    signers: [currentTokenInfo],
   })
 }
 
@@ -255,9 +271,9 @@ export async function withdrawVotingBalace(wallet: WalletContextState, ctx: Envi
   if (!wallet.connected) throw Error("Wallet not connected");
   const provider = new anchor.Provider(ctx.connection, wallet, CONFIRM_OPTIONS);
   const program = new anchor.Program(PROGRAM_IDL, ctx.environment.programId, provider);
-  const [pendingTokensAccount, _bump] = await getPendingTokenAccountPubkey(ctx.environment.programId);
+  const [pendingTokensAccount, bump] = await getPendingTokenAccountPubkey(ctx.environment.programId);
   const voterTokenAccount = await findAssociatedTokenAddress(provider.wallet.publicKey, ctx.environment.votingTokenMint);
-  return await program.rpc.withdrawVotingBalace({
+  return await program.rpc.withdrawVotingBalace({ seed: anchor.utils.bytes.utf8.encode(PENDING_TOKEN_INFOS_SEED), bump }, {
     accounts: {
       pendingTokensAccount,
       voterTokenAccount,

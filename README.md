@@ -3,7 +3,7 @@
 ![SPL Token Registry](demo/public/assets/logo4.png "SPL Token Registry")
 
 ## Inspiration
-Currently in the solana ecosystem there is no trustworthy on-chain source of truth for the existing SPL tokens. There is token-list on github (https://github.com/solana-labs/token-list/blob/main/src/tokens/solana.tokenlist.json) that someone can submit a pull request to add a new mint that includes the mint program address along with other metadata about like token like name, symbol, image, and tags, but this is stored on github and governed by the repo owners. In the context of defi applications like Serum and others, the source of truth for this metadata about the token must be gathered from somewhere and reading from this github list is not a scaeleable decentralized approach. Instead I am proposing an on-chain registry that stores this information and is govered by a voting token (SVOTE) - solana vote.
+Currently in the solana ecosystem there is no trustworthy on-chain source of truth for the existing SPL tokens. There is token-list on github (https://github.com/solana-labs/token-list/blob/main/src/tokens/solana.tokenlist.json) that someone can submit a pull request to add a new mint that includes the mint program address along with other metadata about like token like name, symbol, image, and tags, but this is stored on github and governed by the repo owners. In the context of defi applications like Serum, Mango, Raydium and others, the source of truth for this metadata about the token must be gathered from somewhere and reading from this github list is not a scaeleable decentralized approach. Instead I am proposing an on-chain registry that stores this information and is govered by a voting token (SVOTE) - solana vote.
 
 ## What it does
 The SPL Token Registry stores the metadata for a token mint in a program owned account. It also has a voting system in place where anyone can propose a new token by inputting their desired mint address and associated metadata. When a user proposes a new token a new vote is initiated and there is an expiration for that vote. Holders of the voting token (SVOTE) can contribute votes to that pending token according to the number of voting tokens they have. If the vote receives enough votes before expiration, the vote can be executed and the token becomes officially listed on the list of tokens. If the token does not receive enough votes, it will expire and be removed from the pending list of votes. 
@@ -22,6 +22,15 @@ The biggest challenge in the voting protocol was probably weighing the tradeoff 
 
 ## Accomplishments that we're proud of
 I am proud of the speed at which I developed this project. Being new to solana I made a ton of progress understanding the programming model and building out this program from the ground up the first time around. Doing this before using the anchor framework gave me a good understanding on the internals of anchor and the value it can provide to a solana developer.
+
+## Testing instructions
+```
+git clone https://github.com/jpbogle/spl-token-registry.git
+cd spl-token-registry/program/tests
+npm install
+cd ..
+anchor test
+```
 
 ## What's next for SPL Token Registry
 SPL Token Registry can be the source of truth for token metadata on chain. It is currently deployed on devnet and testnet and can be deployed to mainnet and voting tokens can be minted and airdropped to those willing to participate in governance of the token registry. The next steps are to find a community of people that understand the value of having an on-chain registry and are willing to participate in governance of the platform. Additional features that need to be build are ways to vote to remove tokens, and the UI should be tested with some more people to ensure its ease of use. In addition the libraries for getting this token information can be improved and integrated with projects around the solana ecosystem. If the registry gets very large an indexing protocol also could be considered. 

@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useContext, useEffect } from 'react';
+import React, { useState, useContext, useEffect } from 'react';
 import { Alert } from 'antd';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { useEnvironmentCtx } from './EnvironmentProvider';

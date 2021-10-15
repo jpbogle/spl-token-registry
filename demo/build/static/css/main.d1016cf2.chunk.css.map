@@ -1,1 +1,0 @@
-{"version":3,"sources":["webpack://src/index.css"],"names":[],"mappings":"AAEA,KACE,QAAS,CACT,qBAAuB,CAEvB,gCACF","file":"main.d1016cf2.chunk.css","sourcesContent":["@import '~antd/dist/antd.dark.css';\n\nbody {\n  margin: 0;\n  background-color: black;\n  /* background-color: #282c34; */\n  font-family: 'SFHello', sans-serif;\n}\n"]}

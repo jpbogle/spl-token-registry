@@ -21,22 +21,22 @@ export const ENVIRONMENTS: Environment[] = [
     programId: new PublicKey('ru5MV6sy97YYhGx3WZjWV8jSzWaBShWyoofoapcqypz'),
   },
   {
-    label: 'devnet',
-    value: 'https://api.devnet.solana.com',
-    programId: new PublicKey('ru5MV6sy97YYhGx3WZjWV8jSzWaBShWyoofoapcqypz'),
-    votingTokenMint: new PublicKey('J68Fquq5EQ4hnYPEo68DWC6bbxBGPQUDqMFmFV5nhCrj'),
-  },
-  {
     label: 'testnet',
     value: 'https://api.testnet.solana.com',
     programId: new PublicKey('ru5MV6sy97YYhGx3WZjWV8jSzWaBShWyoofoapcqypz'),
     votingTokenMint: new PublicKey('FSEuiPuTgqSbLbC89jgZ3umR6meYa69JwK7qVqayvjow'),
   },
   {
+    label: 'devnet',
+    value: 'https://api.devnet.solana.com',
+    programId: new PublicKey('ru5MV6sy97YYhGx3WZjWV8jSzWaBShWyoofoapcqypz'),
+    votingTokenMint: new PublicKey('J68Fquq5EQ4hnYPEo68DWC6bbxBGPQUDqMFmFV5nhCrj'),
+  },
+  {
     label: 'localnet',
     value: 'http://127.0.0.1:8899',
     programId: new PublicKey('ru5MV6sy97YYhGx3WZjWV8jSzWaBShWyoofoapcqypz'),
-    votingTokenMint: new PublicKey('517PfUgFP3f52xHQzjjBfbTTCSmSVPzo5JeeiQEE9KWs'),
+    votingTokenMint: new PublicKey('62JGbV4wX3EmKkSNDFiqq18bAMwzhG5VDrZVGZjwWwSP'),
   },
 ];
 
@@ -46,7 +46,7 @@ const EnvironmentContext: React.Context<null | EnvironmentContextValues> = React
 
 export function EnvironmentContextProvider({ children }) {
   // could be used by environment selector
-  const [environment, setEnvironment] = useState(ENVIRONMENTS[1]);
+  const [environment, setEnvironment] = useState(ENVIRONMENTS[2]);
 
   // only update connection if environment changes
   const connection = useMemo(() => new Connection(environment.value, 'recent'), [environment]);

@@ -56,9 +56,9 @@
       ],
       "args": [
         {
-          "name": "tokenInfo",
+          "name": "inst",
           "type": {
-            "defined": "TokenInfo"
+            "defined": "ProposeInstruction"
           }
         }
       ]
@@ -128,10 +128,17 @@
           "isSigner": false
         }
       ],
-      "args": []
+      "args": [
+        {
+          "name": "seeds",
+          "type": {
+            "defined": "Seeds"
+          }
+        }
+      ]
     },
     {
-      "name": "checkVote",
+      "name": "checkCreateVote",
       "accounts": [
         {
           "name": "pendingTokensAccount",
@@ -139,9 +146,81 @@
           "isSigner": false
         },
         {
-          "name": "accountToCreate",
+          "name": "currentTokenInfo",
           "isMut": true,
           "isSigner": true
+        },
+        {
+          "name": "user",
+          "isMut": false,
+          "isSigner": true
+        },
+        {
+          "name": "votingTokenMint",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "mintAddress",
+          "type": "publicKey"
+        }
+      ]
+    },
+    {
+      "name": "checkUpdateVote",
+      "accounts": [
+        {
+          "name": "pendingTokensAccount",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "currentTokenInfo",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "user",
+          "isMut": false,
+          "isSigner": true
+        },
+        {
+          "name": "votingTokenMint",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "mintAddress",
+          "type": "publicKey"
+        }
+      ]
+    },
+    {
+      "name": "checkDeleteVote",
+      "accounts": [
+        {
+          "name": "pendingTokensAccount",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "currentTokenInfo",
+          "isMut": true,
+          "isSigner": false
         },
         {
           "name": "user",
@@ -242,6 +321,24 @@
       }
     },
     {
+      "name": "ProposeInstruction",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "tokenInfo",
+            "type": {
+              "defined": "TokenInfo"
+            }
+          },
+          {
+            "name": "voteType",
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
       "name": "TokenInfo",
       "type": {
         "kind": "struct",
@@ -295,6 +392,10 @@
             "type": {
               "vec": "publicKey"
             }
+          },
+          {
+            "name": "voteType",
+            "type": "i64"
           }
         ]
       }

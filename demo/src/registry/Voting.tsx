@@ -28,6 +28,7 @@ export function usePendingAccount(setLoading, setError): PendingTokenAccount {
             setLoading([]);
           })
           .catch((e) => {
+            console.log(e);
             setLoading([]);
             setPendingTokenAccount(null);
             setError(`${e}`);
@@ -78,8 +79,6 @@ function Voting() {
     else if (favorites.includes(f2.tokenInfo.mintAddress.toBase58())) return 1
     else return 0;
   });
-  console.log(loading);
-
   const UTC_seconds_now = Math.floor(Date.now() / 1000);
   return (
     <>
@@ -157,7 +156,7 @@ function Voting() {
                           setError(null);
                           const txid = await api.voteFor(wallet, ctx, f.tokenInfo.mintAddress, pendingTokenAccount.votingTokenMint);
                           setLoading([...loading, f.tokenInfo.mintAddress.toBase58()])
-                          notify({ message: 'Succes', description: 'You have voted for this token', txid });
+                          notify({ message: 'Success', description: 'You have voted for this token', txid });
                         } catch (e) {
                           setError(`${e}`);
                         }
@@ -170,7 +169,7 @@ function Voting() {
                               setError(null);
                               const txid = await api.checkVote(wallet, ctx, f.tokenInfo.mintAddress, pendingTokenAccount.votingTokenMint);
                               setLoading([...loading, f.tokenInfo.mintAddress.toBase58()])
-                              notify({ message: 'Succes', description: 'You have attempted to check the vote for this token', txid });
+                              notify({ message: 'Success', description: 'You have attempted to check the vote for this token', txid });
                             } catch (e) {
                               setError(`${e}`);
                             }

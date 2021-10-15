@@ -56,11 +56,14 @@ describe("spl-token-registry", () => {
     );
     try {
       await program.rpc.propose({
-        mintAddress: new web3.PublicKey("SRMuApVNdxXokk5GT7XD5cUUgXMBCoAz2LHeuAoKWRt"),
-        tokenName: "Serum",
-        tokenSymbol: "SRM",
-        tokenImageUrl: "https://raw.githubusercontent.com/solana-labs/token-list/main/assets/mainnet/SRMuApVNdxXokk5GT7XD5cUUgXMBCoAz2LHeuAoKWRt/logo.png",
-        tags: ["defi", "dex"],
+        tokenInfo: {
+          mintAddress: new web3.PublicKey("SRMuApVNdxXokk5GT7XD5cUUgXMBCoAz2LHeuAoKWRt"),
+          tokenName: "Serum",
+          tokenSymbol: "SRM",
+          tokenImageUrl: "https://raw.githubusercontent.com/solana-labs/token-list/main/assets/mainnet/SRMuApVNdxXokk5GT7XD5cUUgXMBCoAz2LHeuAoKWRt/logo.png",
+          tags: ["defi", "dex"],
+        },
+        voteType: new anchor.BN(0),
       }, {
         accounts: {
           pendingTokensAccount,
@@ -88,11 +91,14 @@ describe("spl-token-registry", () => {
     );
     try {
       await program.rpc.propose({
-        mintAddress: new web3.PublicKey("SRMuApVNdxXokk5GT7XD5cUUgXMBCoAz2LHeuAoKWRt"),
-        tokenName: "Serum2",
-        tokenSymbol: "SRM2",
-        tokenImageUrl: "https://raw.githubusercontent.com/solana-labs/token-list/main/assets/mainnet/SRMuApVNdxXokk5GT7XD5cUUgXMBCoAz2LHeuAoKWRt/logo.png",
-        tags: ["defi", "dex"],
+        tokenInfo: {
+          mintAddress: new web3.PublicKey("SRMuApVNdxXokk5GT7XD5cUUgXMBCoAz2LHeuAoKWRt"),
+          tokenName: "Serum2",
+          tokenSymbol: "SRM",
+          tokenImageUrl: "https://raw.githubusercontent.com/solana-labs/token-list/main/assets/mainnet/SRMuApVNdxXokk5GT7XD5cUUgXMBCoAz2LHeuAoKWRt/logo.png",
+          tags: ["defi", "dex"],
+        },
+        voteType: new anchor.BN(0),
       }, {
         accounts: {
           pendingTokensAccount,
@@ -163,39 +169,6 @@ describe("spl-token-registry", () => {
     }
   });
 
-  // it("Does not allow for voting more than tokens you have", async () => {
-  //   const seed = Buffer.from(anchor.utils.bytes.utf8.encode("pending_token_infos"));
-  //   const [pendingTokensAccount, bump] = await web3.PublicKey.findProgramAddress(
-  //     [seed],
-  //     program.programId
-  //   );
-    
-  //   // create token account
-  //   const token = new spl.Token(
-  //     provider.connection,
-  //     votingTokenMint.publicKey,
-  //     TOKEN_PROGRAM_ID,
-  //     provider.wallet.payer,
-  //   );
-
-  //   try {
-  //     await program.rpc.voteFor(new anchor.BN(10000), new web3.PublicKey("SRMuApVNdxXokk5GT7XD5cUUgXMBCoAz2LHeuAoKWRt"), {
-  //       accounts: {
-  //         pendingTokensAccount,
-  //         voterTokenAccount,
-  //         user: provider.wallet.publicKey,
-  //         votingTokenMint: votingTokenMint.publicKey,
-  //         tokenProgram: TOKEN_PROGRAM_ID,
-  //       }
-  //     });
-  //     throw Error("Expected to get an error");
-  //   } catch (err) {
-  //     assert.equal(err.code, 143);
-  //   }
-  //   const account = await program.account.pendingTokenInfos.fetch(pendingTokensAccount);
-  //   assert.equal(account.pendingTokenInfos[0].votes, 100);
-  // });
-
   it("Does not allow for voting for the same thing again", async () => {
     const seed = Buffer.from(anchor.utils.bytes.utf8.encode("pending_token_infos"));
     const [pendingTokensAccount, bump] = await web3.PublicKey.findProgramAddress(
@@ -224,7 +197,7 @@ describe("spl-token-registry", () => {
       program.programId
     );
     try {
-      await program.rpc.withdrawVotingBalace({
+      await program.rpc.withdrawVotingBalace({ seed, bump }, {
         accounts: {
           pendingTokensAccount,
           voterTokenAccount,
@@ -245,7 +218,7 @@ describe("spl-token-registry", () => {
       program.programId
     );
     try {
-      await program.rpc.withdrawVotingBalace({
+      await program.rpc.withdrawVotingBalace({ seed, bump }, {
         accounts: {
           pendingTokensAccount,
           voterTokenAccount,
@@ -266,16 +239,16 @@ describe("spl-token-registry", () => {
       program.programId
     );
     const publicKeyToVoteFor = new web3.PublicKey("SRMuApVNdxXokk5GT7XD5cUUgXMBCoAz2LHeuAoKWRt");
-    const accountToCreate = anchor.web3.Keypair.fromSeed(publicKeyToVoteFor.toBytes());
-    await program.rpc.checkVote(publicKeyToVoteFor, {
+    const currentTokenInfo = anchor.web3.Keypair.fromSeed(publicKeyToVoteFor.toBytes());
+    await program.rpc.checkCreateVote(publicKeyToVoteFor, {
       accounts: {
         pendingTokensAccount,
-        accountToCreate: accountToCreate.publicKey,
+        currentTokenInfo: currentTokenInfo.publicKey,
         user: program.provider.wallet.publicKey,
         votingTokenMint: votingTokenMint.publicKey,
         systemProgram: anchor.web3.SystemProgram.programId,
       },
-      signers: [accountToCreate],
+      signers: [currentTokenInfo],
     })
   });
 

@@ -1,14 +1,13 @@
 use anchor_lang::prelude::*;
+use anchor_lang::AccountsClose;
 use anchor_spl::token::{self, SetAuthority, Mint, Token, TokenAccount};
 use spl_token::instruction::AuthorityType;
 pub use spl_associated_token_account::{get_associated_token_address};
 
 declare_id!("ru5MV6sy97YYhGx3WZjWV8jSzWaBShWyoofoapcqypz");
 
-// const REQUIRED_VOTE_COUNT: i64 = 5;
 const REQUIRED_VOTE_PERCENTAGE: f64 = 0.5;
-// 60*60*24*7
-const DEFAULT_VOTE_EXPIRATION: i64 = 60;
+const DEFAULT_VOTE_EXPIRATION: i64 = 60*60*24*7;
 
 #[program]
 mod spl_token_registry {
@@ -20,7 +19,8 @@ mod spl_token_registry {
         Ok(())
     }
 
-    pub fn propose(ctx: Context<Propose>, token_info: TokenInfo) -> ProgramResult {
+    pub fn propose(ctx: Context<Propose>, inst: ProposeInstruction) -> ProgramResult {
+        let token_info = inst.token_info;
         let pending_tokens_account = &mut ctx.accounts.pending_tokens_account;
         if pending_tokens_account.pending_token_infos.iter().any(|t| t.token_info.mint_address == token_info.mint_address) {
             return Err(ErrorCode::AddressAlreadyPending.into())
@@ -33,13 +33,14 @@ mod spl_token_registry {
             token_info: token_info.clone(),
             votes: 0,
             expiration: expiration,
+            // vote_type: inst.vote_type,
             contributors: Vec::new(),
         });
         Ok(())
     }
 
     pub fn vote_for(ctx: Context<VoteFor>, mint_address: Pubkey) -> ProgramResult {
-         ////////////////////////////////
+        ////////////////////////////////
         // let account = ctx.accounts.voter_token_account.to_account_info();
         // let mint = ctx.accounts.voting_token_mint.to_account_info();
         // let authority = ctx.accounts..to_account_info();
@@ -89,7 +90,7 @@ mod spl_token_registry {
         Ok(())
     }
 
-    pub fn withdraw_voting_balace(ctx: Context<WithdrawVotingBalanc>) -> ProgramResult {
+    pub fn withdraw_voting_balace(ctx: Context<WithdrawVotingBalanc>, seeds: Seeds) -> ProgramResult {
         let pending_tokens_account = &mut ctx.accounts.pending_tokens_account;
         // remove expired votes
         let clock = Clock::get().unwrap();
@@ -104,22 +105,45 @@ mod spl_token_registry {
         }
 
         // unfreeze / return the account to the owner
-        if ctx.accounts.voter_token_account.owner != ctx.accounts.pending_tokens_account.key() {
+        if ctx.accounts.voter_token_account.owner == ctx.accounts.pending_tokens_account.key() {
             let cpi_accounts = SetAuthority {
                 account_or_mint: ctx.accounts.voter_token_account.to_account_info().clone(),
                 current_authority: ctx.accounts.pending_tokens_account.to_account_info().clone(),
             };
             let cpi_program = ctx.accounts.token_program.to_account_info();
-            let cpi_context = CpiContext::new(cpi_program, cpi_accounts);
+            let all_seeds = &[&seeds.seed[..], &[seeds.bump]];
+            let seed_input = &[&all_seeds[..]];
+            let cpi_context = CpiContext::new(cpi_program, cpi_accounts).with_signer(seed_input);
             token::set_authority(cpi_context, AuthorityType::AccountOwner, Some(*ctx.accounts.user.key))?;
         }
         Ok(())
     }
 
-    pub fn check_vote(ctx: Context<CheckVote>, mint_address: Pubkey) -> ProgramResult {
+    pub fn check_create_vote(ctx: Context<CheckCreateVote>, mint_address: Pubkey) -> ProgramResult {
         let pending_tokens_account = &mut ctx.accounts.pending_tokens_account;
         let approved_token = pending_tokens_account.pending_token_infos.iter().find(|x| x.token_info.mint_address == mint_address).unwrap();
-        ctx.accounts.account_to_create.token_info = approved_token.token_info.clone();
+        ctx.accounts.current_token_info.token_info = approved_token.token_info.clone();
+        let clock = Clock::get().unwrap();
+        let timestamp = clock.unix_timestamp;
+        let required_vote = (ctx.accounts.voting_token_mint.supply as f64 * REQUIRED_VOTE_PERCENTAGE) as i64;
+        pending_tokens_account.pending_token_infos.retain(|x| (x.expiration >= timestamp || x.votes >= required_vote) && x.token_info.mint_address != mint_address);
+        Ok(())
+    }
+
+    pub fn check_update_vote(ctx: Context<CheckUpdateVote>, mint_address: Pubkey) -> ProgramResult {
+        let pending_tokens_account = &mut ctx.accounts.pending_tokens_account;
+        let approved_token = pending_tokens_account.pending_token_infos.iter().find(|x| x.token_info.mint_address == mint_address).unwrap();
+        ctx.accounts.current_token_info.token_info = approved_token.token_info.clone();
+        let clock = Clock::get().unwrap();
+        let timestamp = clock.unix_timestamp;
+        let required_vote = (ctx.accounts.voting_token_mint.supply as f64 * REQUIRED_VOTE_PERCENTAGE) as i64;
+        pending_tokens_account.pending_token_infos.retain(|x| (x.expiration >= timestamp || x.votes >= required_vote) && x.token_info.mint_address != mint_address);
+        Ok(())
+    }
+
+    pub fn check_delete_vote(ctx: Context<CheckDeleteVote>, mint_address: Pubkey) -> ProgramResult {
+        let pending_tokens_account = &mut ctx.accounts.pending_tokens_account;
+        let _res = ctx.accounts.current_token_info.close(ctx.accounts.user.to_account_info())?;
         let clock = Clock::get().unwrap();
         let timestamp = clock.unix_timestamp;
         let required_vote = (ctx.accounts.voting_token_mint.supply as f64 * REQUIRED_VOTE_PERCENTAGE) as i64;
@@ -141,6 +165,12 @@ mod spl_token_registry {
 pub struct Seeds {
     pub bump: u8,
     pub seed: [u8; 19],
+}
+
+#[derive(AnchorSerialize, AnchorDeserialize)]
+pub struct ProposeInstruction {
+    pub token_info: TokenInfo,
+    // pub vote_type: i64,
 }
 
 #[derive(Accounts)]
@@ -205,18 +235,53 @@ pub struct WithdrawVotingBalanc<'info> {
 
 #[derive(Accounts)]
 #[instruction(mint_address: Pubkey)]
-pub struct CheckVote<'info> {
+pub struct CheckCreateVote<'info> {
     #[account(mut)]
     pub pending_tokens_account: Account<'info, PendingTokenInfos>,
     #[account(
         init,
-        // seeds = [seeds.seed.as_ref()],
-        // bump = seeds.bump,
         payer = user,
         space = 1024,
         constraint = pending_tokens_account.pending_token_infos.iter().find(|x| x.token_info.mint_address == mint_address).unwrap().votes >= ((voting_token_mint.supply as f64 * REQUIRED_VOTE_PERCENTAGE) as i64),
+        // constraint = pending_tokens_account.pending_token_infos.iter().find(|x| x.token_info.mint_address == mint_address).unwrap().vote_type == 0,
     )]
-    pub account_to_create: Account<'info, TokenInfoAccount>,
+    pub current_token_info: Account<'info, TokenInfoAccount>,
+    pub user: Signer<'info>,
+    #[account(constraint = pending_tokens_account.voting_token_mint == *voting_token_mint.to_account_info().key)]
+    pub voting_token_mint: Account<'info, Mint>,
+    pub system_program: Program<'info, System>,
+}
+
+#[derive(Accounts)]
+#[instruction(mint_address: Pubkey)]
+pub struct CheckUpdateVote<'info> {
+    #[account(mut)]
+    pub pending_tokens_account: Account<'info, PendingTokenInfos>,
+    #[account(
+        mut,
+        constraint = pending_tokens_account.pending_token_infos.iter().find(|x| x.token_info.mint_address == mint_address).unwrap().votes >= ((voting_token_mint.supply as f64 * REQUIRED_VOTE_PERCENTAGE) as i64),
+        // constraint = pending_tokens_account.pending_token_infos.iter().find(|x| x.token_info.mint_address == mint_address).unwrap().vote_type == 1,
+        constraint = mint_address == current_token_info.token_info.mint_address,
+    )]
+    pub current_token_info: Account<'info, TokenInfoAccount>,
+    pub user: Signer<'info>,
+    #[account(constraint = pending_tokens_account.voting_token_mint == *voting_token_mint.to_account_info().key)]
+    pub voting_token_mint: Account<'info, Mint>,
+    pub system_program: Program<'info, System>,
+}
+
+#[derive(Accounts)]
+#[instruction(mint_address: Pubkey)]
+pub struct CheckDeleteVote<'info> {
+    #[account(mut)]
+    pub pending_tokens_account: Account<'info, PendingTokenInfos>,
+    #[account(
+        mut,
+        constraint = pending_tokens_account.pending_token_infos.iter().find(|x| x.token_info.mint_address == mint_address).unwrap().votes >= ((voting_token_mint.supply as f64 * REQUIRED_VOTE_PERCENTAGE) as i64),
+        // constraint = pending_tokens_account.pending_token_infos.iter().find(|x| x.token_info.mint_address == mint_address).unwrap().vote_type == 2,
+        constraint = mint_address == current_token_info.token_info.mint_address,
+    )]
+    pub current_token_info: Account<'info, TokenInfoAccount>,
     pub user: Signer<'info>,
     #[account(constraint = pending_tokens_account.voting_token_mint == *voting_token_mint.to_account_info().key)]
     pub voting_token_mint: Account<'info, Mint>,
@@ -259,6 +324,8 @@ pub struct PendingTokenInfo {
 	pub votes: i64,
     // contributors to the vote
     pub contributors: Vec<Pubkey>,
+    // vote type
+    // pub vote_type: i64,
 }
 
 #[account]
@@ -267,6 +334,13 @@ pub struct PendingTokenInfos {
     pub pending_token_infos: Vec<PendingTokenInfo>,
     pub voting_token_mint: Pubkey,
 }
+
+// #[derive(Debug, Clone, AnchorSerialize, AnchorDeserialize, PartialEq)]
+// pub enum VoteType {
+//     CREATE = 0,
+//     UPDATE = 1,
+//     DELETE = 2,
+// }
 
 #[error]
 pub enum ErrorCode {

@@ -8,6 +8,7 @@ import { useError } from './ErrorProvider';
 import Initialized from './Initialized';
 
 const Header = styled.div`
+  z-index: 10;
   width: 96%;
   margin: 0px auto;
   height: 60px;
@@ -43,11 +44,18 @@ const Header = styled.div`
   }
 
   #voting-power {
-    margin-left: 20px;
+    margin: 0px 20px;
     border: 1px solid ${Colors.borderColor};
     border-radius: 10px;
     background: ${Colors.darkBlue};
     padding: 4px 8px;
+    i {
+      margin-left: 10px;
+      cursor: pointer;
+      &:hover {
+        color: ${Colors.borderColor};
+      }
+    }
   }
 `;
 

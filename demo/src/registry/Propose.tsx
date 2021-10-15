@@ -100,6 +100,7 @@ function Propose() {
             setTags([]);
             notify({ message: 'Succes', description: 'Token proposed succesfully', txid });
           } catch (e) {
+            console.log(e);
             setIsLoading(false);
             setError(`${e}`);
           }
