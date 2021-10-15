@@ -214,6 +214,7 @@ export async function getPendingTokenAccount(ctx: EnvironmentContextValues): Pro
   const [pendingTokensAccount, _bump] = await getPendingTokenAccountPubkey(ctx.environment.programId);
   const provider = new anchor.Provider(ctx.connection, null, CONFIRM_OPTIONS);
   const program = new anchor.Program(PROGRAM_IDL, ctx.environment.programId, provider);
+  console.log(pendingTokensAccount.toBase58());
   const account = await program.account.pendingTokenInfos.fetch(pendingTokensAccount);
   // @ts-ignore
   return account;
