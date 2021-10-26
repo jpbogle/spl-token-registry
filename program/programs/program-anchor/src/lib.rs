@@ -25,7 +25,6 @@ mod spl_token_registry {
         if pending_tokens_account.pending_token_infos.iter().any(|t| t.token_info.mint_address == token_info.mint_address) {
             return Err(ErrorCode::AddressAlreadyPending.into())
         }
-        // TODO check if it is an update
         let clock = Clock::get().unwrap();
         let timestamp = clock.unix_timestamp;
         let expiration = timestamp + DEFAULT_VOTE_EXPIRATION;
@@ -40,23 +39,7 @@ mod spl_token_registry {
     }
 
     pub fn vote_for(ctx: Context<VoteFor>, mint_address: Pubkey) -> ProgramResult {
-        ////////////////////////////////
-        // let account = ctx.accounts.voter_token_account.to_account_info();
-        // let mint = ctx.accounts.voting_token_mint.to_account_info();
-        // let authority = ctx.accounts..to_account_info();
-        // msg!("authority = {:?}", authority);
-        // msg!("account = {:?}", account);
-        // let ix = spl_token::instruction::freeze_account(ctx.accounts.token_program.key, account.key, mint.key, authority.key, &[])?;
-        // solana_program::program::invoke_signed(
-        //     &ix,
-        //     &[
-        //         account.clone(),
-        //         mint.clone(),
-        //         ctx.accounts.token_program.to_account_info().clone(),
-        //     ],
-        //     &[],
-        // )?;
-        // freeze or set authority to PDA
+        // freeze
         if ctx.accounts.voter_token_account.owner != ctx.accounts.pending_tokens_account.key() {
             let cpi_accounts = SetAuthority {
                 account_or_mint: ctx.accounts.voter_token_account.to_account_info().clone(),

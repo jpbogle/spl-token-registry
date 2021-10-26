@@ -98,7 +98,7 @@ function Propose() {
             setSymbol("");
             setImageUrl("");
             setTags([]);
-            notify({ message: 'Succes', description: 'Token proposed succesfully', txid });
+            notify({ message: 'Success', description: 'Token proposed succesfully', txid });
           } catch (e) {
             console.log(e);
             setIsLoading(false);

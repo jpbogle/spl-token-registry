@@ -237,16 +237,7 @@ export async function checkVote(wallet: WalletContextState, ctx: EnvironmentCont
   const currentTokenInfo = anchor.web3.Keypair.fromSeed(mintAddress.toBytes());
   const accountInfo = await program.account.tokenInfoAccount.fetch(currentTokenInfo.publicKey).catch((e) => console.log("Assuming new token account", e));
   if (accountInfo) {
-    return program.rpc.checkUpdateVote(mintAddress, {
-      accounts: {
-        pendingTokensAccount,
-        currentTokenInfo: currentTokenInfo.publicKey,
-        user: program.provider.wallet.publicKey,
-        votingTokenMint,
-        systemProgram: anchor.web3.SystemProgram.programId,
-      }
-    });
-    // return program.rpc.checkDeleteVote(mintAddress, {
+    // return program.rpc.checkUpdateVote(mintAddress, {
     //   accounts: {
     //     pendingTokensAccount,
     //     currentTokenInfo: currentTokenInfo.publicKey,
@@ -255,6 +246,15 @@ export async function checkVote(wallet: WalletContextState, ctx: EnvironmentCont
     //     systemProgram: anchor.web3.SystemProgram.programId,
     //   }
     // });
+    return program.rpc.checkDeleteVote(mintAddress, {
+      accounts: {
+        pendingTokensAccount,
+        currentTokenInfo: currentTokenInfo.publicKey,
+        user: program.provider.wallet.publicKey,
+        votingTokenMint,
+        systemProgram: anchor.web3.SystemProgram.programId,
+      }
+    });
   }
   return program.rpc.checkCreateVote(mintAddress, {
     accounts: {
